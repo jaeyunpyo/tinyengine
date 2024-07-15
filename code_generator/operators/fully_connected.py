@@ -28,14 +28,16 @@ default_params = {
     "output_shift": None,
     "activation": None,
     "use_bias": None,
-    "input_buf_add": None,
-    "input_buf_add_offset": 0,
+    "input1_buf_add": None,
+    "input1_buf_add_offset": 0,
     "input2_buf_add": None,  # Renamed to input2_buf_add
     "input2_buf_add_offset": 0,  # Renamed to input2_buf_add_offset
     "input3_buf_add": None,  # Renamed to input3_buf_add for bias
     "input3_buf_add_offset": 0,  # Renamed to input3_buf_add_offset for bias
     "output_buf_add": None,
     "output_buf_add_offset": 0,
+    "input_size": None,
+    "output_size": None,
 }
 
 class FullyConnectedOperator(basicOperator):
@@ -57,8 +59,8 @@ class FullyConnectedOperator(basicOperator):
         params = self.params
 
         # Ensure buffer addresses are not None
-        if params["input_buf_add"] is None:
-            raise ValueError("input_buf_add must not be None")
+        if params["input1_buf_add"] is None:
+            raise ValueError("input1_buf_add must not be None")
         if params["input2_buf_add"] is None:
             raise ValueError("input2_buf_add must not be None")
         if params["output_buf_add"] is None:
@@ -66,7 +68,7 @@ class FullyConnectedOperator(basicOperator):
         if self.params["use_bias"] and params["input3_buf_add"] is None:
             raise ValueError("input3_buf_add must not be None if use_bias is True")
 
-        input_str = self._getBufferstrCast(params["input_buf_add"], params["input_buf_add_offset"], dtype=params["input_dtype"])
+        input_str = self._getBufferstrCast(params["input1_buf_add"], params["input1_buf_add_offset"], dtype=params["input_dtype"])
         weight_str = self._getBufferstrCast(params["input2_buf_add"], params["input2_buf_add_offset"], dtype=params["weight_dtype"])
         output_str = self._getBufferstrCast(params["output_buf_add"], params["output_buf_add_offset"], dtype=params["output_dtype"])
         bias_str = "NULL"
@@ -86,10 +88,12 @@ class FullyConnectedOperator(basicOperator):
         weight_shift = params["weight_shift"] if params["weight_shift"] is not None else 0
         output_shift = params["output_shift"] if params["output_shift"] is not None else 0
         activation = params["activation"] if params["activation"] is not None else 0
+        input_size = params["input_size"] if params["input_size"] is not None else 0
+        output_size = params["output_size"] if params["output_size"] is not None else 0
         
         return (f"fully_connected({input_str}, {weight_str}, {bias_str}, {output_str}, "
                 f"{input_zero_point}, {weight_zero_point}, {output_zero_point}, "
                 f"{input_scale}, {weight_scale}, {output_scale}, "
                 f"{input_multiplier}, {weight_multiplier}, {output_multiplier}, "
                 f"{input_shift}, {weight_shift}, {output_shift}, "
-                f"{activation});")
+                f"{activation}, {input_size}, {output_size});")

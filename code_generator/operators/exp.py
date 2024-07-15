@@ -42,7 +42,7 @@ class exp(basicOperator):
         if params["input_dtype"] == "float32":
             string = (
                 f"tte_exp({self.params['input_size']},"
-                + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"
             )
         else:

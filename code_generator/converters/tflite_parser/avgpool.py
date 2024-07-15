@@ -47,7 +47,9 @@ def parse_avgpool(op, model: Model.Model):
         pad_h = 0
         pad_w = 0
     elif padding == Padding.SAME:
-        pass  # no support for now
+        pad_h = max((output_h - 1) * stride_h + filter_h - input_h, 0) // 2
+        pad_w = max((output_w - 1) * stride_w + filter_w - input_w, 0) // 2
+
 
     # quantized setting
     input_zero_point = input_tensor.qnn_params["zero_point"]
@@ -76,7 +78,8 @@ def parse_avgpool(op, model: Model.Model):
         "output_h": output_h,
         "output_w": output_w,
         "output_c": output_c,
-        "dtypte": input_type,
+        "input_dtype": input_type,
+        "output_dtype": output_type,
         # trainable parameters
         "input_zero_point": input_zero_point,
         "output_zero_point": output_zero_point,

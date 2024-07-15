@@ -40,7 +40,7 @@ class mat_mul(basicOperator):
     def generate_inference_str(self):
         params = self.params
         if params["input_dtype"] == "float32":
-            string = f"mat_mul({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+            string = f"mat_mul({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             string += f"{str(params['matA_row'])},{str(params['matA_col'])},"
             string += f"weight_fp{params['parsed_trainable']},{str(params['matB_col'])},"
             string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

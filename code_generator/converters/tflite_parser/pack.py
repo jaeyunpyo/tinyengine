@@ -30,4 +30,8 @@ def parse_pack(op, model):
         "output_dtype": output_dtype,
     }
 
+    for i, tensor in enumerate(input_tensors):
+        params[f"input{i+1}_buf_add"] = str(tensor.tensor_idx)
+        params[f"input{i+1}_buf_add_offset"] = "0"  # Adjust as needed
+
     return PackOperator(params)

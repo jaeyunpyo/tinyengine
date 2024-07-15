@@ -56,7 +56,7 @@ class div(basicOperator):
                 scale_divisor = f"{self.params['scale_from_add']}"
                 string += (
                     f"fptr3 = {self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])}; "
-                    + f"fptr2 = {self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])};\n"
+                    + f"fptr2 = {self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])};\n"
                 )
                 string += (
                     f"for(int i = 0; i < {self.params['input_size']}; i++) *fptr3++ = *fptr2++ / {scale_divisor};\n"

@@ -51,7 +51,7 @@ class permute_4D_3012(basicOperator):
         params = self.params
         if params["input_dtype"] == "float32":
             string = (
-                f"permute4D_dim3012({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                f"permute4D_dim3012({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             )
             string += f"{params['d1']},{params['d3']},{params['d4']},{params['d2']},"  # OIHW -> OHWI
             string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

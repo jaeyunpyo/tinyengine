@@ -14,12 +14,21 @@ default_params = {
     "input_dtype": "float32",
     "input2_dtype": "float32",
     "output_dtype": "float32",
+    
     "weight_value": None,
+    "weight_zero_point": None,
+    "weight_shift": None,
+    "weight_multiplier": None,
+    
     "bias": None,
     "input_zero_point": None,
     "output_zero_point": None,
     "input_scale": None,
+    "input_shift": None,
+    
     "output_scale": None,
+    "output_shift": None,
+    
     "multiplier": None,
     "shift": None,
     "scale_conv_2d_op": None,
@@ -51,14 +60,40 @@ class mul(basicOperator):
             function_name = "mul"
         elif params["input_dtype"] == "int8":
             function_name = "mul_int8"
+            input_zero_point = params["input_zero_point"]
+            input2_zero_point = params["weight_zero_point"]
+            output_zero_point = params["output_zero_point"]
+            input_scale = params["input_scale"]
+            input2_scale = params["weight_multiplier"]
+            output_scale = params["output_scale"]
+            
+            input_shift = params.get("input_shift", 0)
+            input2_shift = params.get("weight_shift", 0)
+            output_shift = params.get("output_shift", 0)
         else:
             raise NotImplementedError(f"Data type {params['input_dtype']} is not implemented for mul operator.")
 
-        input_str = f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'], dtype=params['input_dtype'])}"
+        input_str = f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'], dtype=params['input_dtype'])}"
         input2_str = f"{self._getBufferstrCast(params['input2_buf_add'], params['input2_buf_add_offset'], dtype=params['input2_dtype'])}"
         output_str = f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'], dtype=params['output_dtype'])}"
 
-        if params["input_size"] != params["input2_size"]:
+        if params["input_dtype"] == "int8":
+            string = (
+                f"{function_name}({self.params['output_size']},"
+                + f"{input_str},"
+                + f"{input2_str},"
+                + f"{output_str},"
+                + f"{input_zero_point},"
+                + f"{input2_zero_point},"
+                + f"{output_zero_point},"
+                + f"{input_scale},"
+                + f"{input2_scale},"
+                + f"{output_scale},"
+                + f"{input_shift},"
+                + f"{input2_shift},"
+                + f"{output_shift});\n"
+            )
+        elif params["input_size"] != params["input2_size"]:
             if self.params["input_size"] > self.params["input2_size"]:
                 input_array_ptr = input_str
                 scaler = input2_str
@@ -133,10 +168,11 @@ class mul(basicOperator):
                     )
         else:
             string = (
-                f"{function_name}({self.params['output_size']},"
-                + f"{input_str},"
-                + f"{input2_str},"
-                + f"{output_str});\n"
-            )
+                    f"{function_name}({self.params['output_size']},"
+                    + f"{input_str},"
+                    + f"{input2_str},"
+                    + f"{output_str});\n"
+                )
+                
 
         return string

@@ -147,7 +147,7 @@ class DepthwiseConv2d(basicOperator):
                 weight_string = f"weight_fp{params['parsed_trainable']}"
             string += (
                 "DepthwiseConv(dpconv_params,"
-                + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                 + f"{weight_string},{params['kernel_h']},{params['kernel_w']},bias_fp{params['parsed_trainable']},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -183,7 +183,7 @@ class DepthwiseConv2d(basicOperator):
             else:
                 string += (
                     f"TFLite_DepthwiseConv_int8_PerChannel(dpconv_params,multiplier{parsed_idx},shift{parsed_idx},"
-                    + f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     # TODO: bias data might be incorrect for now
                     + f"(const int8_t*) weight{parsed_idx},{params['kernel_h']},"
@@ -212,7 +212,7 @@ class DepthwiseConv2d(basicOperator):
                     function_name += "_mask"
 
             # input tensor, shape, weight, bias
-            string += f"{function_name}({self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+            string += f"{function_name}({self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             string += f"{str(params['input_w'])},{str(params['input_h'])},{str(params['input_c'])},"
             parsed_idx = str(params["parsed_trainable"])
             string += f"(const q7_t*) CHWweight{parsed_idx},offsetBias{parsed_idx},offsetRBias{parsed_idx},"

@@ -96,11 +96,11 @@ class Add(basicOperator):
             if USE_BIT_MASK:
                 string += (
                     f"add_fpreq_bitmask({str(int(params['input_h']*params['input_w']*params['input_c']))}, "
-                    + f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 )
             else:
                 string += f"add_fpreq_mask({str(int(params['input_h']*params['input_w']*params['input_c']))}, "
-                +f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+                +f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             string += (
                 f"{str(params['input_scale'])},{str(params['input_zero_point'])},"
                 + f"{self._getBufferstr(params['input2_buf_add'], params['input2_buf_add_offset'])},"
@@ -112,7 +112,7 @@ class Add(basicOperator):
         else:
             string += (
                 f"add_fpreq({str(int(params['input_h']*params['input_w']*params['input_c']))}, "
-                + f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+                + f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{str(params['input_scale'])},{str(params['input_zero_point'])},"
                 + f"{self._getBufferstr(params['input2_buf_add'], params['input2_buf_add_offset'])},"
                 + f"{str(params['input2_scale'])},{str(params['input2_zero_point'])},"

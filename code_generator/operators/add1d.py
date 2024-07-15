@@ -47,7 +47,7 @@ class add1d(basicOperator):
         if params["input_dtype"] == "float32":
             string = (
                 f"add_fp({self.params['input_size']},"
-                + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{self._getBufferstrCast(params['input2_buf_add'], params['input2_buf_add_offset'])},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"
             )

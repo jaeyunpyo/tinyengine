@@ -6,6 +6,7 @@ from .basic_utils import basicOperator, deep_copy_dicts, overwrite_dicts
 default_params = {
     "op": "CONCATENATION",
     "input_indices": None,
+    "input_shapes": None,
     "output_idx": None,
     "axis": None,
     "input_dtype": None,
@@ -27,12 +28,22 @@ class ConcatenationOperator(basicOperator):
 
         if None in default_params.values():
             warnings.warn(f"parameters are not all set for op {self.params['op']}")
+            
+    def _get_input_size(self, shape):
+        # Calculate the size of the input tensor based on its shape
+        size = 1
+        for dim in shape:
+            size *= dim
+        return size
 
     def generate_inference_str(self):
         params = self.params
+        input_sizes = [self._get_input_size(shape) for shape in params["input_shapes"]]        
+        input_sizes_strs = ", ".join([str(size) for size in input_sizes])
+        
         input_str = ", ".join([
-            self._getBufferstrCast(params[f"input_buf_add"], 
-                                params[f"input_buf_add_offset"], 
+            self._getBufferstrCast(params[f"input1_buf_add"], 
+                                params[f"input1_buf_add_offset"], 
                                 dtype=params["input_dtype"]) 
             , 
             self._getBufferstrCast(params[f"input2_buf_add"], 
@@ -42,7 +53,7 @@ class ConcatenationOperator(basicOperator):
         output_str = self._getBufferstrCast(params["output_buf_add"], params["output_buf_add_offset"], dtype=params["output_dtype"])
         
         string = (
-            f"concatenate({input_str}, {output_str}, {params['axis']});\n"
+            f"concatenate({input_str}, {input_sizes_strs}, {output_str}, {params['axis']});\n"
         )
 
         return string

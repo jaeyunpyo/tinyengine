@@ -169,7 +169,7 @@ class Conv2d(basicOperator):
 
             string += (
                 "TFLite_Conv_fp(conv_params,"
-                + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                 + f"{weight_string},{params['kernel_h']},{params['kernel_w']},{params['input_c']},NULL,"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -204,7 +204,7 @@ class Conv2d(basicOperator):
                 input_address_string = "&buffer0[0]"
                 output_address_string = "&buffer0[0]"
             else:
-                input_address_string = f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])}"
+                input_address_string = f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])}"
                 output_address_string = (
                     f"{self._getBufferstr(params['output_buf_add'], params['output_buf_add_offset'])}"
                 )
@@ -255,7 +255,24 @@ class Conv2d(basicOperator):
             elif kernel_h == 3 and params["stride_h"] == 1 and params["padding"] == 1:
                 function_name = "convolve_s8_kernel3_stride1_pad1"
             elif kernel_h == 16:
-                function_name = "conv2d_16x16"
+                function_name = "conv2d_16x16_fpreq"
+                parsed_idx = str(params["parsed_trainable"])
+                weight_name = params['weight_name'] if params['weight_name'] is not None else "0"
+                bias_name = params['bias_name'] if params['bias_name'] is not None else "0"
+                # effective_scale = params['effective_scale'] if params['effective_scale'] is not None else "0"
+
+                string += f"{function_name}("
+                string += f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
+                string += f"{params['input_w']},{params['input_h']},{params['input_c']},"
+                string += f"(const q7_t*)weight{weight_name},bias{bias_name},"
+                string += f"scales{parsed_idx},"                
+                string += f"{params['output_w']},{params['output_h']},{params['output_c']},"
+                string += f"{self._getBufferstr(params['output_buf_add'], params['output_buf_add_offset'])},"
+                string += f"{params['stride_h']},{params['padding']},"
+                string += f"{params['input_zero_point']},{params['output_zero_point']},"
+                string += f"-128,127,"
+                string += "sbuf);\n"  # sbuf added as intermediate buffer
+                return string
             else:
                 raise NotImplementedError
 
@@ -275,11 +292,11 @@ class Conv2d(basicOperator):
             if unsigned_input:
                 string += (
                     f"{function_name}((const q8_t *)"
-                    + f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 )
             else:
                 string += (
-                    f"{function_name}({self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    f"{function_name}({self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 )
             string += f"{str(params['input_w'])},{str(params['input_h'])},{str(params['input_c'])},"
             parsed_idx = str(params["parsed_trainable"])

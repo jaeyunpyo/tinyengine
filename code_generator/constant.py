@@ -69,13 +69,13 @@ FIGURE_CONFIG = {
     "FIGURE_W_INCH": 19,
     "FIGURE_H_INCH": 7,
     "DPI": 800,
-    "Y_STEP": 96,
+    "Y_STEP": 250,
     "Y_MAX": 5000,
     "X_STEP": 30,
     "X_MAX": 900,
     "SHOW_INDEX": False,
-    "FONT_SIZE": 32,
-    "INDEX_FONT_SIZE": 24,
+    "FONT_SIZE": 16,
+    "INDEX_FONT_SIZE": 12,
 }
 
 

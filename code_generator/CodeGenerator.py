@@ -20,6 +20,7 @@ import os
 
 from .constant import FUSE_SGD_UPDATE_STR, FUSHION_CONFIG
 from .OpGenerator import OpGenerator
+# from .operators.basic_utils import basicOperator, deep_copy_dicts, overwrite_dicts
 
 #tinyengine\experimental\vit\build
 Codegen_root = "./tinyengine/experimental/vit/build/"
@@ -187,7 +188,7 @@ void update_SGD(float learning_rate){\n"""
                 last_patch_op.params["output_buf_add"], last_patch_op.params["output_buf_add_offset"]
             )
             first_bufferstr_for_normal_inference = first_normal_op._getBufferstr(
-                first_normal_op.params["input_buf_add"], first_normal_op.params["input_buf_add_offset"]
+                first_normal_op.params["input1_buf_add"], first_normal_op.params["input1_buf_add_offset"]
             )
             assert last_patch_op
             fp = self.source_handle
@@ -329,7 +330,8 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
                 layer_info = op.get_layer_info()
                 if "is_patch" not in layer_info or not layer_info["is_patch"]:
                     break  # end of patch-based
-                string = "/* layer " + str(layercnt) + ":" + layer_info["op"] + " */\n"
+                # string = "/* layer " + str(layercnt) + ":" + layer_info["op"] + " */\n"
+                string = "printf(\"/* layer " + str(layercnt) + ":" + layer_info["op"] + " */\n)\"" + "\n"
                 layercnt += 1
                 fp.write(string)
                 if layer_info["op"] == "CONV_2D":
@@ -365,7 +367,7 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
             fp.write(string)
         else:  # not patch-based
             string = """void end2endinference(q7_t* img){
-    invoke(NULL);
+    //invoke(NULL);
 }
 """
             fp = self.source_handle
@@ -427,6 +429,7 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         string = "}\n"
         fp.write(string)
 
+
     def _genInvokeInf(self):
         fp = self.source_handle
         string = "void invoke_inf(){\n"
@@ -435,8 +438,8 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         schedule = self.MemSche
         for i, op in enumerate(schedule.layer):
             layer_info = op.get_layer_info()
-            string = "/* layer " + str(i) + ":" + layer_info["op"] + " */\n"
-            fp.write(string)
+            # string = "/* layer " + str(i) + ":" + layer_info["op"] + " */\n"
+            fp.write(f"printf(\"/* layer {i}:{layer_info['op']} */\\n\");\n")                   
 
             if layer_info["op"] == "CONV_2D":
                 if (
@@ -475,6 +478,10 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
             else:
                 string = self._genOpstr(op)
                 fp.write(string)
+                
+            # _getBufferstr 메서드 호출 및 출력 버퍼 내용 출력
+            output_str = op._getBufferstr(layer_info["output_buf_add"], layer_info['output_buf_add_offset'])
+            fp.write(f"for(int i=0; i<50; i++) printf(\"%3hhd \", {output_str}+i); printf(\"\\n\");\n")
 
         string = "}\n"
         fp.write(string)
@@ -494,7 +501,7 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         fp = self.header_handle
         fp.write(string)
         
-        string = "void genModel(signed char* input, signed char* output);\n"
+        string = "void genModel(signed char* data, signed char* output);\n"
         fp.write(string)
                 
         schedule = self.MemSche
@@ -535,6 +542,7 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
 #include "genNN.h"
 #include "genModel.h"
 #include "genInclude.h"
+#include "my_function.h"
 """
         if self.profile_mode:
             include_string += '#include "profile.h"\n'
@@ -551,7 +559,7 @@ signed char *fptr,*fptr2,*fptr3;
 
 signed char* getInput() {
     return &buffer0["""
-            + f"{self.MemSche.layer[0].params['input_buf_add_offset']}"
+            + f"{self.MemSche.layer[0].params['input1_buf_add_offset']}"
             + """];
 }
 signed char* getOutput() {
@@ -981,8 +989,28 @@ signed char* getOutput() {
         
     def _genGenModel(self):
         fp = self.source_handle
-        string = """void genModel(signed char* input, signed char* output){
+        string = """void genModel(signed char* data, signed char* output){
+     /* Convert the OpenCV image from BGR to RGB */
+    signed char* input = getInput();
+    int num_row = 224;
+    int num_col = 224;
+    int num_channel = 3;
+    
+    for (int i = 0; i < num_row; i++) {
+        for (int j = 0; j < num_col; j++) {
+            uint8_t b = data[(i * num_col + j) * num_channel + 0];
+            uint8_t g = data[(i * num_col + j) * num_channel + 1];
+            uint8_t r = data[(i * num_col + j) * num_channel + 2];
+
+            *input++ = (int)r - 128;
+            *input++ = (int)g - 128;
+            *input++ = (int)b - 128;
+        }
+    }            
+            
     invoke_inf();
+    
+    output = getOutput();
     }"""
         fp.write(string)
 

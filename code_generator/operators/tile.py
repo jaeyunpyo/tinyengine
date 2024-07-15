@@ -66,7 +66,7 @@ class tile(basicOperator):
         params = self.params
         if params["input_dtype"] == "float32":
             string = (
-                f"tile_3D({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                f"tile_3D({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{self.params['input_h']},{self.params['input_w']},{self.params['input_c']},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
                 + f"{self.params['output_h']},"
@@ -74,7 +74,7 @@ class tile(basicOperator):
             )
         elif params["input_dtype"] == "int8":
             string = (
-                f"tile_3D_int8({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'], dtype='int8')},"
+                f"tile_3D_int8({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'], dtype='int8')},"
                 + f"{self.params['input_h']},{self.params['input_w']},{self.params['input_c']},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'], dtype='int8')},"
                 + f"{self.params['output_h']},"

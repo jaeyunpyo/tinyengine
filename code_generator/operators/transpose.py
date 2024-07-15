@@ -29,8 +29,8 @@ class transpose(basicOperator):
         super().__init__()
         # handle input/output tensors in HWC format
         if "weight" in self.params["input_idx"]:
-            self.params["input_buf_add"] = self.params["input_idx"]
-            self.params["input_buf_add_offset"] = 0
+            self.params["input1_buf_add"] = self.params["input_idx"]
+            self.params["input1_buf_add_offset"] = 0
         else:
             self._add_input(
                 self.params["input_idx"],
@@ -54,7 +54,7 @@ class transpose(basicOperator):
         params = self.params
         if params["input_dtype"] == "float32":
             string = (
-                f"transpose_3Dto3D({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                f"transpose_3Dto3D({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             )
             string += f"{str(params['input_h'])},{str(params['input_w'])},{str(params['input_c'])},"
             string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

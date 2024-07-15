@@ -6,8 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include_directories(${CMAKE_SOURCE_DIR})
 
-# AVX 및 AVX2 활성화
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx -mavx2")
+# CMSIS-DSP 라이브러리 경로 설정
+include_directories($ENV{CMSIS_PATH}/CMSIS/Core/Include)
+include_directories($ENV{CMSIS_PATH}/CMSIS/DSP/Include)
 
 # 소스 파일 설정
 set(SOURCES
@@ -20,3 +21,6 @@ set_source_files_properties(genModel.c PROPERTIES LANGUAGE CXX)
 
 # 실행 파일 생성
 add_executable(MyProject ${SOURCES})
+
+# CMSIS-DSP 라이브러리 링크
+target_link_libraries(MyProject arm_cortexM7lfsp_math)

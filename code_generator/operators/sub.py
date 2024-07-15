@@ -53,7 +53,7 @@ class sub(basicOperator):
         else:
             raise NotImplementedError(f"Data type {params['input_dtype']} is not implemented for sub operator.")
 
-        input_str = f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'], dtype=params['input_dtype'])}"
+        input_str = f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'], dtype=params['input_dtype'])}"
         input2_str = f"{self._getBufferstrCast(params['input2_buf_add'], params['input2_buf_add_offset'], dtype=params['input2_dtype'])}"
         output_str = f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'], dtype=params['output_dtype'])}"
 

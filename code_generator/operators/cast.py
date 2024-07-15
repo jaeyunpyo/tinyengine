@@ -103,7 +103,7 @@ class cast(basicOperator):
                 f"{output_ptr} = ({output_type_str}*)"
                 + f"{self._getBufferstr(params['output_buf_add'], params['output_buf_add_offset'])};\n"
                 + f"{input_ptr} = ({input_type_str}*)"
-                + f"{self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])};\n"
+                + f"{self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])};\n"
                 + f"for(int i = 0; i < {params['input_size']}; i++) "
                 + f"{output_ptr}[i] = ({output_type_str}){input_ptr}[i];\n"
             )

@@ -15,6 +15,15 @@ def parse_fully_connected(op, model):
 
     input_shape = input_tensor.tensor.ShapeAsNumpy().tolist()
     output_shape = output_tensor.tensor.ShapeAsNumpy().tolist()
+    
+    # Calculate input_size and output_size
+    input_size = 1
+    for dim in input_shape:
+        input_size *= dim
+
+    output_size = 1
+    for dim in output_shape:
+        output_size *= dim
 
     # Create the operator parameters
     params = {
@@ -35,6 +44,8 @@ def parse_fully_connected(op, model):
         "weight_scale": weight_tensor.qnn_params["scale"] if weight_tensor.qnn_params else 1.0,
         "output_scale": output_tensor.qnn_params["scale"] if output_tensor.qnn_params else 1.0,
         "use_bias": bias_tensor is not None,
+        "input_size": input_size,  # Add input_size
+        "output_size": output_size,  # Add output_size
     }
 
     return FullyConnectedOperator(params)

@@ -30,14 +30,16 @@ class PackOperator(basicOperator):
 
     def generate_inference_str(self):
         params = self.params
-        input_buffers = [
-            self._getBufferstrCast(params["input_buf_add"], params["input_buf_add_offset"], dtype=params["input_dtype"]),
-            self._getBufferstrCast(params["input2_buf_add"], params["input2_buf_add_offset"], dtype=params["input_dtype"])
-        ]
-        if len(params["input_indices"]) > 2:
+        input_buffers = []
+
+        for i in range(len(params["input_indices"])):
+            input_add = str(params[f"input{i+1}_buf_add"])
+            input_offset = str(params[f"input{i+1}_buf_add_offset"])
             input_buffers.append(
-                self._getBufferstrCast(params["input3_buf_add"], params["input3_buf_add_offset"], dtype=params["input_dtype"])
+                self._getBufferstrCast(input_add, input_offset, dtype=params["input_dtype"])
             )
+
         input_str = ", ".join(input_buffers)
-        output_str = self._getBufferstrCast(params["output_buf_add"], params["output_buf_add_offset"], dtype=params["output_dtype"])
+        output_str = self._getBufferstrCast(str(params["output_buf_add"]), str(params["output_buf_add_offset"]), dtype=params["output_dtype"])
+        
         return f"pack({input_str}, {output_str}, {len(params['input_indices'])}, {params['axis']});"

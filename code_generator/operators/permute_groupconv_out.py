@@ -50,7 +50,7 @@ class permute_groupconv_out(basicOperator):
         if params["input_dtype"] == "float32":
             string = (
                 "permute_groupconv_out("
-                + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                 + f"{int(params['input_c']/params['groups'])},{params['groups']},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

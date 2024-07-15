@@ -82,7 +82,7 @@ class stridedSlice(basicOperator):
             + "};\n"
         )
         input_str = self._getBufferstrCast(
-            params["input_buf_add"], params["input_buf_add_offset"], dtype=params["input_dtype"]
+            params["input1_buf_add"], params["input1_buf_add_offset"], dtype=params["input_dtype"]
         )
         output_str = self._getBufferstrCast(
             params["output_buf_add"], params["output_buf_add_offset"], dtype=params["output_dtype"]

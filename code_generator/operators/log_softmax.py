@@ -50,7 +50,7 @@ class logSoftMax(basicOperator):
     def generate_inference_str(self):
         params = self.params
         if params["input_dtype"] == "float32":
-            string = f"LogSoftmax({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+            string = f"LogSoftmax({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             string += f"{params['input_h']},{params['input_w']},{params['input_c']},"
             string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
             string += f"{params['output_h']},{params['output_w']},{params['output_c']});\n"

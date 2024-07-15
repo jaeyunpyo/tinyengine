@@ -79,7 +79,7 @@ class maxPool2d(basicOperator):
 
     def generate_inference_str(self):
         params = self.params
-        string = f"max_pooling({self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+        string = f"max_pooling({self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
         string += (
             f"{str(params['input_h'])},{str(params['input_w'])},{str(params['input_c'])},{str(params['stride_h'])},"
         )

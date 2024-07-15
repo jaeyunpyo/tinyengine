@@ -42,7 +42,7 @@ class greater(basicOperator):
     def generate_inference_str(self):
         params = self.params
         input_1_str = self._getBufferstrCast(
-            params["input_buf_add"], params["input_buf_add_offset"], dtype=self.input_tensors[0].dtype
+            params["input1_buf_add"], params["input1_buf_add_offset"], dtype=self.input_tensors[0].dtype
         )
         input_2_str = self._getBufferstrCast(
             params["input2_buf_add"], params["input2_buf_add_offset"], dtype=self.input_tensors[1].dtype
