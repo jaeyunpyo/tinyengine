@@ -246,7 +246,7 @@ class GeneralMemoryScheduler:
             layermem["scale"] = op.get_scale_size()
             layermem["runtime"] = op.get_sbuf_size()
             layermem["kernel"] = op.get_kbuf_size()
-            self._enlargeBuffer("im2col", layermem["runtime"])
+            self._enlargeBuffer("im2col", layermem["runtime"] + 172800)
             self._enlargeBuffer("kernel", layermem["kernel"])
 
             if (
@@ -329,14 +329,17 @@ class GeneralMemoryScheduler:
             # get all unallocated tensors for this layer
             for cnt, t in enumerate(op.input_tensors):
                 if cnt == 0:
-                    op.params["input_buf_add_offset"] = self.allocator.getIdxAddress(t.allocator_idx)
-                    op.params["input_buf_add"] = "front"
+                    op.params["input1_buf_add_offset"] = self.allocator.getIdxAddress(t.allocator_idx)
+                    op.params["input1_buf_add"] = "front"
                 elif cnt == 1:
                     op.params["input2_buf_add_offset"] = self.allocator.getIdxAddress(t.allocator_idx)
                     op.params["input2_buf_add"] = "front"
                 elif cnt == 2:
                     op.params["input3_buf_add_offset"] = self.allocator.getIdxAddress(t.allocator_idx)
                     op.params["input3_buf_add"] = "front"
+                elif cnt == 3:
+                    op.params["input4_buf_add_offset"] = self.allocator.getIdxAddress(t.allocator_idx)
+                    op.params["input4_buf_add"] = "front"
                 op.input_tensors[cnt].buffer_name = "buffer0"
                 op.input_tensors[cnt].buffer_address = self.allocator.getIdxAddress(t.allocator_idx)
             for cnt, t in enumerate(op.output_tensors):

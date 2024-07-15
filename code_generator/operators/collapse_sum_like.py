@@ -61,7 +61,7 @@ class collapseSumLike(basicOperator):
 
         if params["input_dtype"] == "float32":
             string = f"fptr = (float*){self._getBufferstr(params['output_buf_add'], params['output_buf_add_offset'])};"
-            string += f"fptr2 = (float*){self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])};"
+            string += f"fptr2 = (float*){self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])};"
             string += f"for(int i = 0; i < {size}; i++) fptr[i] = fptr2[i];\n"
         else:
             raise NotImplementedError

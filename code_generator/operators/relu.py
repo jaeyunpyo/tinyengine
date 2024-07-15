@@ -58,7 +58,7 @@ class relu(basicOperator):
         params = self.params
         if params["input_dtype"] == "float32":
             string = f"relu({str(params['input_h'])}*{str(params['input_w'])}*{str(params['input_c'])},"
-            string += f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+            string += f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"
         else:
             raise NotImplementedError

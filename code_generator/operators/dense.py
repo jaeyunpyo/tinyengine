@@ -52,7 +52,7 @@ class dense(basicOperator):
     def generate_inference_str(self):
         params = self.params
         if params["input_dtype"] == "float32":
-            string = f"dense({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+            string = f"dense({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             string += f"{str(params['matA_row'])},{str(params['matA_col'])},"
             string += f"weight_fp{params['parsed_trainable']},{str(params['matB_row'])},"
             string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

@@ -67,7 +67,7 @@ class biasAdd(basicOperator):
 
         if params["input_dtype"] == "float32":
             string = (
-                f"bias_add_3D({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                f"bias_add_3D({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 + f"{str(params['input_h'])},{str(params['input_w'])},"
                 + f"{str(params['input_c'])},bias_fp{params['parsed_trainable']},"
                 + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

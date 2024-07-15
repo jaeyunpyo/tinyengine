@@ -41,7 +41,7 @@ class bias_update(basicOperator):
         for i in 1 / self.params["QAS"]:
             string += str(i) + ","
         string += "};\n"
-        input_str = self._getBufferstr(params["input_buf_add"], params["input_buf_add_offset"])
+        input_str = self._getBufferstr(params["input1_buf_add"], params["input1_buf_add_offset"])
         if params["input_dtype"] == "float32":
             string += (
                 f"fptr = (float*){input_str};//gradients\n"

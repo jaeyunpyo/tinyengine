@@ -75,7 +75,7 @@ class upSample(basicOperator):
 
     def generate_inference_str(self):
         params = self.params
-        string = f"upsample_byte({self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])}, "
+        string = f"upsample_byte({self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])}, "
         string += f"{str(params['input_h'])}, {str(params['input_w'])}, {str(params['input_c'])}, "
         string += f"{self._getBufferstr(params['output_buf_add'], params['output_buf_add_offset'])}, "
         string += f"{str(int(params['factor']))});\n"

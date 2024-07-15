@@ -70,14 +70,14 @@ class nllLoss(basicOperator):
         if params["input_dtype"] == "float32":
             if islabelstr(self.params["input2_idx"]):
                 string = (
-                    f"nll_loss({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    f"nll_loss({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"2,{params['input_c']},"
                     + f"labels,{params['input_w']},"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"
                 )
             else:
                 string = (
-                    f"nll_loss({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},2,1,"
+                    f"nll_loss({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},2,1,"
                 )
                 string += f"{self._getBufferstrCast(params['input2_buf_add'], params['input2_buf_add_offset'])},1,"
                 string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

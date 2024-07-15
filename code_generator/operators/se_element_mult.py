@@ -85,7 +85,7 @@ class SEelementmult(basicOperator):
         string = ""
         params = self.params
         string += (
-            f"element_mult_nx1({self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])},"
+            f"element_mult_nx1({self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])},"
             + f"{str(int(params['input_h']))},"
             + f"{str(int(params['input_w']))},"
             f"{str(int(params['input_c']))},"

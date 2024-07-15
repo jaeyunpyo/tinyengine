@@ -52,7 +52,7 @@ class reshape_like(basicOperator):
             if params["input_w"] == params["input_h"] == 1:
                 string = (
                     "reshape_like_1dto4d("
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input2_h']},{params['input2_w']},{params['input2_c']},"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"
                 )

@@ -6,9 +6,6 @@
 #include "genNN.h"
 #include "genModel.h"
 #include "genInclude.h"
-#include "my_function.h"
-
-#include <stdint.h>
 
 /* Variables used by all ops */
 ADD_params add_params;
@@ -25,42 +22,53 @@ signed char* getOutput() {
     return NNoutput;
 }
 void end2endinference(q7_t* img){
-    invoke_inf(NULL);
+    invoke(NULL);
 }
+
 void invoke_inf(){
-/* layer 0:SHAPE */
-shape(&buffer0[0], &buffer0[0], 4);/* layer 1:STRIDED_SLICE */
-const uint16_t begin0[] = {0, 0, 0, 0};
-const uint16_t end0[] = {1, 0, 0, 0};
-const uint16_t strides0[] = {1, 0, 0, 0};
-strided_slice_4Dto4D_int32((int32_t*)&buffer0[0], 4, 1, 1, 1, begin0, end0, strides0, (int32_t*)&buffer0[16], 1, 1, 1, 1);
-/* layer 2:PACK */
-pack((int32_t*)&buffer0[16], (int32_t*)&buffer0[4975496], (int32_t*)&buffer0[4613760], (int32_t*)&buffer0[4975496], 3, 0);/* layer 3:PACK */
-pack((int32_t*)&buffer0[4975500], (int32_t*)&buffer0[16], (int32_t*)&buffer0[4975500], (int32_t*)&buffer0[4975500], 4, 0);/* layer 4:CONCATENATION */
-concatenate((int32_t*)&buffer0[4975504], (int32_t*)&buffer0[4975504], (int32_t*)&buffer0[4975504], 0);
-/* layer 5:CONV_2D */
-conv2d_16x16_fpreq(&buffer0[0],224,224,3,(const q7_t*) weight0,bias0,scales0,-68,-127,-128,127,&buffer0[0],14,14,192,sbuf,127);
-/* layer 6:TILE */
-tile_3D_int8((signed char*)&buffer0[4975508],1,1,1,(signed char*)&buffer0[4975508],1,1,1);
-/* layer 7:CONCATENATION */
-concatenate((signed char*)&buffer0[4975512], (signed char*)&buffer0[4975512], (signed char*)&buffer0[188352], 1);
-/* layer 8:ADD */
-add_fpreq(1, &buffer0[188352],0.03561903163790703,-68,&buffer0[4975516],0.044805221259593964,-27,0.07606906443834305,-55,&buffer0[150528]);
-/* layer 9:SQUARED_DIFFERENCE */
-squared_difference((signed char*)&buffer0[150528], (signed char*)&buffer0[188352], (signed char*)&buffer0[188352], 1, 197);
-/* layer 10:AVERAGE_POOL_2D */
-avg_pooling(&buffer0[226376],192,1,197,192,1,1,1,-128,127,&buffer0[226176]);
-/* layer 11:ADD */
-add_fpreq(197, &buffer0[226176],0.006562494672834873,-128,&buffer0[4802880],3.921568403342235e-09,0,0.006562494672834873,-128,&buffer0[226376]);
-/* layer 12:RSQRT */
-rsqrt((signed char*)&buffer0[226376], (signed char*)&buffer0[4954176], 1, 197);
-/* layer 13:MUL */
-fptr = (float*)(signed char*)&buffer0[226176];
-fptr3 = (float*)(signed char*)&buffer0[264000];
-fptr2 = (signed char*)&buffer0[226176];
-for(int i = 0; i < 37824; i++) fptr3[i] = *fptr2 * fptr[i];
-/* layer 14:MUL */
-mul_int8(37824,(signed char*)&buffer0[301824],(signed char*)&buffer0[264000],(signed char*)&buffer0[301824]);
+    /* layer 0:SHAPE */
+    shape(&buffer0[0], &buffer0[0], 4);
+    
+    /* layer 1:STRIDED_SLICE */
+    const uint16_t begin0[] = {0, 0, 0, 0};
+    const uint16_t end0[] = {1, 0, 0, 0};
+    const uint16_t strides0[] = {1, 0, 0, 0};
+    strided_slice_4Dto4D_int32((int32_t*)&buffer0[0], 4, 1, 1, 1, begin0, end0, strides0, (int32_t*)&buffer0[16], 1, 1, 1, 1);
+    
+    /* layer 2:PACK */
+    pack((int32_t*)&buffer0[16], (int32_t*)&buffer0[4975496], (int32_t*)&buffer0[4613760], (int32_t*)&buffer0[4975496], 3, 0);
+    /* layer 3:PACK */
+    pack((int32_t*)&buffer0[4975500], (int32_t*)&buffer0[16], (int32_t*)&buffer0[4975500], (int32_t*)&buffer0[4975500], 4, 0);
+    
+    /* layer 4:CONCATENATION */
+    concatenate((int32_t*)&buffer0[4975504], (int32_t*)&buffer0[4975504], (int32_t*)&buffer0[4975504], 0);
+    
+    /* layer 5:CONV_2D */
+    conv2d_16x16_fpreq(&buffer0[0],224,224,3,(const q7_t*) weight0,bias0,scales0,-68,-127,-128,127,&buffer0[0],14,14,192,sbuf,127);
+    
+    /* layer 6:TILE */
+    tile_3D_int8((signed char*)&buffer0[4975508],1,1,1,(signed char*)&buffer0[4975508],1,1,1);
+    
+    /* layer 7:CONCATENATION */
+    concatenate((signed char*)&buffer0[4975512], (signed char*)&buffer0[4975512], (signed char*)&buffer0[188352], 1);
+    
+    /* layer 8:ADD */
+    add_fpreq(1, &buffer0[188352],0.03561903163790703,-68,&buffer0[4975516],0.044805221259593964,-27,0.07606906443834305,-55,&buffer0[150528]);
+    /* layer 9:SQUARED_DIFFERENCE */
+    squared_difference((signed char*)&buffer0[150528], (signed char*)&buffer0[188352], (signed char*)&buffer0[188352], 1, 197);
+    /* layer 10:AVERAGE_POOL_2D */
+    avg_pooling(&buffer0[226376],192,1,197,192,1,1,1,-128,127,&buffer0[226176]);
+    /* layer 11:ADD */
+    add_fpreq(197, &buffer0[226176],0.006562494672834873,-128,&buffer0[4802880],3.921568403342235e-09,0,0.006562494672834873,-128,&buffer0[226376]);
+    /* layer 12:RSQRT */
+    rsqrt((signed char*)&buffer0[226376], (signed char*)&buffer0[4954176], 1, 197);
+    /* layer 13:MUL */
+    fptr = (float*)(signed char*)&buffer0[226176];
+    fptr3 = (float*)(signed char*)&buffer0[264000];
+    fptr2 = (signed char*)&buffer0[226176];
+    for(int i = 0; i < 37824; i++) fptr3[i] = *fptr2 * fptr[i];
+    /* layer 14:MUL */
+    mul_int8(37824,(signed char*)&buffer0[301824],(signed char*)&buffer0[264000],(signed char*)&buffer0[301824]);
 /* layer 15:MUL */
 fptr = (signed char*)&buffer0[264000];
 fptr3 = (float*)(signed char*)&buffer0[339648];fptr2 = (signed char*)&buffer0[339648];
@@ -93,8 +101,23 @@ reduce_prod_int32((int32_t*)(int32_t*)&buffer0[264012], (int32_t*)(int32_t*)&buf
 pack((int32_t*)&buffer0[264020], (int32_t*)&buffer0[264000], (int32_t*)&buffer0[4975532], 2, 0);/* layer 28:FULLY_CONNECTED */
 fully_connected((signed char*)&buffer0[264000], (signed char*)&buffer0[4975536], NULL, (signed char*)&buffer0[4975536], -73, 0, 14, 0.05217108875513077, 0.0033674186561256647, 0.036277152597904205, 0, 0, 0, 0, 0, 0, 0);/* layer 29:ADD */
 add_fpreq(1, &buffer0[4959368],0.036277152597904205,14,&buffer0[4959368],0.00592309283092618,10,0.037194766104221344,15,&buffer0[4959368]);
+
 /* layer 30:FULLY_CONNECTED */
-fully_connected((signed char*)&buffer0[264000], (signed char*)&buffer0[4975540], NULL, (signed char*)&buffer0[4975540], -73, 0, 8, 0.05217108875513077, 0.0037488278467208147, 0.02718372270464897, 0, 0, 0, 0, 0, 0, 0);/* layer 31:ADD */
+fully_connected(
+    //input, weights, bias, output
+    (signed char*)&buffer0[264000], (signed char*)&buffer0[4975540], NULL, (signed char*)&buffer0[4975540], 
+    //input_zero_point, weight_zero_point, output_zero_point
+    -73, 0, 8, 
+    //input_scale, weight_scale, output_scale
+    0.05217108875513077, 0.0037488278467208147, 0.02718372270464897, 
+    //input_multiplier, weight_multiplier, output_multiplier
+    0, 0, 0, 
+    //input_shift, weight_shift, output_shift
+    0, 0, 0, 
+    //activation
+    0);
+
+/* layer 31:ADD */
 add_fpreq(1, &buffer0[4959560],0.02718372270464897,8,&buffer0[4959560],0.02005819045007229,-4,0.03273185342550278,-5,&buffer0[4959560]);
 /* layer 32:BATCH_MATMUL */
 batch_matmul((signed char*)&buffer0[4959752], (signed char*)&buffer0[4959752], (signed char*)&buffer0[4959752], 1, 3, 1, 3, false, false);

@@ -62,7 +62,7 @@ class sum(basicOperator):
         if params["input_dtype"] == "float32":
             if params["d1"] == 1 and not params["exclude"]:  # use 3D fallback
                 mapping = {"0": None, "1": 2, "2": 0, "3": 1}
-                string = f"sum_3D({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                string = f"sum_3D({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 string += (
                     f"{self.params['d3']},{self.params['d4']},{self.params['d2']},{mapping[str(self.params['axis'])]},"
                 )
@@ -70,7 +70,7 @@ class sum(basicOperator):
             elif params["exclude"]:
                 mapping = {"0": 0, "1": 3, "2": 1, "3": 2}
                 string = (
-                    f"sum_4D_exclude({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    f"sum_4D_exclude({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 )
                 string += (
                     f"{self.params['d1']},{self.params['d3']},{self.params['d4']},{self.params['d2']},"
@@ -83,7 +83,7 @@ class sum(basicOperator):
                 mapping = {"0": 0, "1": 3, "2": 1, "3": 2}
                 string = (
                     "sum_4D_exclude_int8("
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'], 'int8')},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'], 'int8')},"
                     + f"{self.params['d1']},{self.params['d3']},{self.params['d4']},{self.params['d2']},"
                     + f"{mapping[str(self.params['axis'])]},"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'], 'int32')}"

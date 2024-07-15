@@ -24,8 +24,10 @@ class ShapeOperator(basicOperator):
             warnings.warn(f"parameters are not all set for op {self.params['op']}")
 
     def generate_inference_str(self):
-        input_buffer = self._getBufferstr("front", 0)
-        output_buffer = self._getBufferstr("end", 0)
+        input_buffer = self._getBufferstr(self.params['input1_buf_add'], self.params['input1_buf_add_offset'])
+        output_buffer = self._getBufferstr(self.params['output_buf_add'], self.params['output_buf_add_offset'])
+        # input_buffer = self._getBufferstr("front", 0)
+        # output_buffer = self._getBufferstr("end", 0)
         return f"shape({input_buffer}, {output_buffer}, {len(self.params['input_shape'])});"
 
     def get_macs(self):

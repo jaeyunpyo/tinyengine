@@ -26,6 +26,12 @@ def parse_batch_matmul(op, model):
         "input_dtype": getTensorTypeStr(input_tensor.tensor.Type()),
         "input2_dtype": getTensorTypeStr(input2_tensor.tensor.Type()),
         "output_dtype": getTensorTypeStr(output_tensor.tensor.Type()),
+        "input_zero_point": input_tensor.qnn_params["zero_point"] if input_tensor.qnn_params else 0,
+        "input2_zero_point": input2_tensor.qnn_params["zero_point"] if input2_tensor.qnn_params else 0,
+        "output_zero_point": output_tensor.qnn_params["zero_point"] if output_tensor.qnn_params else 0,
+        "input_scale": input_tensor.qnn_params["scale"] if input_tensor.qnn_params else 1.0,
+        "input2_scale": input2_tensor.qnn_params["scale"] if input2_tensor.qnn_params else 1.0,
+        "output_scale": output_tensor.qnn_params["scale"] if output_tensor.qnn_params else 1.0,
         "adj_x": False,  # Set as needed
         "adj_y": False,  # Set as needed
     }

@@ -223,7 +223,7 @@ class groupConv2d(basicOperator):
                     else:
                         string += (
                             f"{function_name}_inplace(conv_params,{params['groups']},"
-                            + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                            + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                             + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                             + f"{weight_string},{params['kernel_h']},{params['kernel_w']},NULL,"
                             + f"{params['inplace_weight_name']},"
@@ -233,7 +233,7 @@ class groupConv2d(basicOperator):
             else:
                 string += (
                     f"{function_name}(conv_params,{params['groups']},"
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},{params['kernel_h']},{params['kernel_w']},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -323,7 +323,7 @@ class groupConv2d(basicOperator):
 
                     string += (
                         f"{function_name}"
-                        + f"({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                        + f"({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                         + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                         + f"{weight_string},NULL,"
                         + f"{params['inplace_weight_name']},"
@@ -347,7 +347,7 @@ class groupConv2d(basicOperator):
                 else:
                     string += (
                         f"{function_name}"
-                        + f"({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                        + f"({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                         + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                         + f"{weight_string},NULL,"
                         + f"{params['inplace_weight_name']},"
@@ -365,7 +365,7 @@ class groupConv2d(basicOperator):
             else:
                 string += (
                     f"{function_name}"
-                    + f"({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"

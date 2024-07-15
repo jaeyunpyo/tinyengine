@@ -190,7 +190,7 @@ class transposeConv2d(basicOperator):
                 output_address_string = "&buffer0[0]"
             else:
                 input_address_string = (
-                    f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])}"
+                    f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])}"
                 )
                 output_address_string = (
                     f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])}"
@@ -286,7 +286,7 @@ class transposeConv2d(basicOperator):
                 if params["first_k_channel"] is None:
                     string += (
                         f"{function_name}_int8weight("
-                        + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                        + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                         + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                         + f"(q7_t*){weight_string},NULL,"
                         + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -314,7 +314,7 @@ class transposeConv2d(basicOperator):
 
                     string += (
                         f"{function_name}("
-                        + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                        + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                         + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                         + f"(q7_t*){weight_string},(q7_t*){weight_string}Flash,{params['first_k_channel']},NULL,"
                         + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -333,7 +333,7 @@ class transposeConv2d(basicOperator):
             else:
                 string += (
                     f"{function_name}("
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -376,7 +376,7 @@ class transposeConv2d(basicOperator):
             if params["input2_dtype"] == "int8" and params["input_dtype"] == "float32":
                 string += (
                     f"{function_name}_int8weight(conv_params,"
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},{params['kernel_h']},{params['kernel_w']},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -386,7 +386,7 @@ class transposeConv2d(basicOperator):
             else:
                 string += (
                     f"{function_name}(conv_params,"
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},{params['kernel_h']},{params['kernel_w']},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -421,7 +421,7 @@ class transposeConv2d(basicOperator):
             if params["input2_dtype"] == "int8" and params["input_dtype"] == "float32":
                 string += (
                     f"{function_name}_int8weight("
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"
@@ -440,7 +440,7 @@ class transposeConv2d(basicOperator):
             else:
                 string += (
                     f"{function_name}("
-                    + f"{self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    + f"{self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                     + f"{params['input_h']},{params['input_w']},{params['input_c']},"
                     + f"{weight_string},NULL,"
                     + f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])},"

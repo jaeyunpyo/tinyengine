@@ -48,7 +48,7 @@ class SquaredDifferenceOperator(basicOperator):
 
     def generate_inference_str(self):
         input_str = self._getBufferstrCast(
-            self.params['input_buf_add'], self.params['input_buf_add_offset'], dtype=self.params["input_dtype"]
+            self.params['input1_buf_add'], self.params['input1_buf_add_offset'], dtype=self.params["input_dtype"]
         )
         input2_str = self._getBufferstrCast(
             self.params['input2_buf_add'], self.params['input2_buf_add_offset'], dtype=self.params["input2_dtype"]

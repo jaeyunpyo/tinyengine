@@ -41,7 +41,7 @@ class negative(basicOperator):
     def generate_inference_str(self):
         params = self.params
         size = params["input_size"]
-        string = f"fptr = (float*){self._getBufferstr(params['input_buf_add'], params['input_buf_add_offset'])};"
+        string = f"fptr = (float*){self._getBufferstr(params['input1_buf_add'], params['input1_buf_add_offset'])};"
         string += f"fptr2 = (float*){self._getBufferstr(params['output_buf_add'], params['output_buf_add_offset'])};"
         string += f"for(int i = 0; i < {size}; i++) fptr2[i] = fptr[i] * -1.0f;\n"
 

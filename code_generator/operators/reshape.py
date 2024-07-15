@@ -48,7 +48,7 @@ class reshape(basicOperator):
         if params["input_dtype"] == "float32":
             if params["output_w"] == params["output_h"] == 1:
                 string = (
-                    f"reshape_3dto1d({self._getBufferstrCast(params['input_buf_add'], params['input_buf_add_offset'])},"
+                    f"reshape_3dto1d({self._getBufferstrCast(params['input1_buf_add'], params['input1_buf_add_offset'])},"
                 )
                 string += f"{params['input_h']},{params['input_w']},{params['input_c']},"
                 string += f"{self._getBufferstrCast(params['output_buf_add'], params['output_buf_add_offset'])});\n"

@@ -86,8 +86,8 @@ def parse_mul(op, model):
         "bias": None,  # assuming no bias for MUL
         
         "weight_zero_point": weight_zero_point,
-        "weight_zero_point": weight_zero_point,
         "weight_multiplier": weight_multiplier,
+        "weight_shift": weight_shift,
         
         "input_zero_point": input_zero_point,
         "output_zero_point": output_zero_point,

@@ -33,7 +33,7 @@ class ReduceProdOperator(basicOperator):
 
     def generate_inference_str(self):
         params = self.params
-        input_str = self._getBufferstrCast(params["input_buf_add"], params["input_buf_add_offset"], dtype=params["input_dtype"])
+        input_str = self._getBufferstrCast(params["input1_buf_add"], params["input1_buf_add_offset"], dtype=params["input_dtype"])
         output_str = self._getBufferstrCast(params["output_buf_add"], params["output_buf_add_offset"], dtype=params["output_dtype"])
         
         reduction_axes_var = f"reduction_axes_{self.instance_id}"
@@ -63,14 +63,14 @@ class ReduceProdOperator(basicOperator):
             declaration_str = f"int {reduction_axes_var}[] = {{{reduction_axes_str}}};\n"
             self.reduction_axes_var_declared = True           
             string = (
-                f"{function_name}(({input_ctype}*){input_str}, ({output_ctype}*){output_str}, {params['input_size']}, "
+                f"{function_name}({input_str}, {output_str}, {params['input_size']}, "
                 + f"{params['output_size']}, {reduction_axes_var}, {len(params['reduction_axes'])});\n"
             )
             return declaration_str + string
         
         else:
             string = (
-                f"{function_name}(({input_ctype}*){input_str}, ({output_ctype}*){output_str}, {params['input_size']}, "
+                f"{function_name}({input_str}, {output_str}, {params['input_size']}, "
                 + f"{params['output_size']}, {reduction_axes_var}, {len(params['reduction_axes'])});\n"
             )
             return string
