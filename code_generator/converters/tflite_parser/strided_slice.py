@@ -1,6 +1,6 @@
 from code_generator.operators.strided_slice_v2 import StridedSliceOperator
 from .utils import get_input_tensors, get_output_tensors, getTensorTypeStr
-import tflite
+from tflite.StridedSliceOptions import StridedSliceOptions
 
 def parse_strided_slice(op, model):
     input_tensors = get_input_tensors(op, model)
@@ -15,7 +15,7 @@ def parse_strided_slice(op, model):
         output_shape += [1] * (4 - len(output_shape))
 
     # Parse options
-    options = tflite.StridedSliceOptions()
+    options = StridedSliceOptions()
     options.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
 
     begin_mask = options.BeginMask()
