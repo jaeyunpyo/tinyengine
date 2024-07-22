@@ -1002,9 +1002,9 @@ signed char* getOutput() {
             uint8_t g = data[(i * num_col + j) * num_channel + 1];
             uint8_t r = data[(i * num_col + j) * num_channel + 2];
 
-            *input++ = (int)r - 128;
-            *input++ = (int)g - 128;
-            *input++ = (int)b - 128;
+            *input++ = (int)r; //-128;
+            *input++ = (int)g;
+            *input++ = (int)b;
         }
     }            
             
@@ -1012,6 +1012,7 @@ signed char* getOutput() {
     
     signed char* out = getOutput();
     for(int i=0;i<1000;i++){
+
         output[i] = out[i] + 128;
     }
     }"""

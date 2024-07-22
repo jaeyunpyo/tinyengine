@@ -2438,8 +2438,9 @@ void genModel(signed char* data, signed char* output){
             
     invoke_inf();
 
-    signed char* out = getOutput();
+  signed char* out = getOutput();
     for(int i=0;i<1000;i++){
         *(output + i) = out[i];
+    }
     }
 }

@@ -2,13 +2,13 @@
 
 from code_generator.operators.concatenation import ConcatenationOperator
 from .utils import get_input_tensors, get_output_tensors, getTensorTypeStr
-import tflite
+from tflite.ConcatenationOptions import ConcatenationOptions
 
 def parse_concatenation(op, model):
     input_tensors = get_input_tensors(op, model)
     output_tensors = get_output_tensors(op, model)
 
-    options = tflite.ConcatenationOptions()
+    options = ConcatenationOptions()
     options.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
 
     try:

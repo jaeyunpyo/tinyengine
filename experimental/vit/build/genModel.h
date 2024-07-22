@@ -1,6 +1,7 @@
 #include <stdint.h>
 void genModel(unsigned char* data, unsigned char* output);
 
+
 #define NNoutput &buffer0[4765248];
 
 /* sram:5447360, flash:148992 */
