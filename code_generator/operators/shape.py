@@ -28,6 +28,9 @@ class ShapeOperator(basicOperator):
         output_buffer = self._getBufferstr(self.params['output_buf_add'], self.params['output_buf_add_offset'])
         # input_buffer = self._getBufferstr("front", 0)
         # output_buffer = self._getBufferstr("end", 0)
+        for x in self.params['input_shape']:
+            print(x)
+            
         return f"shape({input_buffer}, {output_buffer}, {len(self.params['input_shape'])});"
 
     def get_macs(self):
