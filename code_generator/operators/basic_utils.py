@@ -147,6 +147,20 @@ sprintf(buf, \""""
             return f"&buffer{location}[{offset}]"
         else:
             raise NotImplementedError
+        
+    def _getBufferstrPrint(self, location, offset):
+        if location == "front":
+            return f"buffer0[{offset}+i]"
+        elif location == "end":
+            return f"buffer0[{offset}+i]"
+        elif location == "residual":
+            return f"buffer1[{offset}+i]"
+        elif location.startswith("stage"):
+            return f"buffer{location}[{offset}+i]"
+        elif location.startswith("dagop"):
+            return f"buffer{location}[{offset}+i]"
+        else:
+            raise NotImplementedError
 
     def _getBufferstrCast(self, location, offset, dtype="float32"):
         ret = ""

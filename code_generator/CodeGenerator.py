@@ -480,8 +480,8 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
                 fp.write(string)
                 
             # _getBufferstr 메서드 호출 및 출력 버퍼 내용 출력
-            output_str = op._getBufferstr(layer_info["output_buf_add"], layer_info['output_buf_add_offset'])
-            fp.write(f"for(int i=0; i<50; i++) printf(\"%3hhd \", {output_str}+i); printf(\"\\n\");\n")
+            output_str = op._getBufferstrPrint(layer_info["output_buf_add"], layer_info['output_buf_add_offset'])
+            fp.write(f"for(int i=0; i<50; i++) printf(\"%04d \", {output_str}); printf(\"\\n\");\n")
 
         string = "}\n"
         fp.write(string)
@@ -501,7 +501,7 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         fp = self.header_handle
         fp.write(string)
         
-        string = "void genModel(signed char* data, signed char* output);\n"
+        string = "void genModel(unsigned char* data, unsigned char* output);\n"
         fp.write(string)
                 
         schedule = self.MemSche
@@ -989,7 +989,8 @@ signed char* getOutput() {
         
     def _genGenModel(self):
         fp = self.source_handle
-        string = """void genModel(signed char* data, signed char* output){
+        string = """void genModel(unsigned char* data, unsigned char* output){
+     /* Convert the OpenCV image from BGR to RGB */
     signed char* input = getInput();
     int num_row = 224;
     int num_col = 224;
@@ -1011,7 +1012,8 @@ signed char* getOutput() {
     
     signed char* out = getOutput();
     for(int i=0;i<1000;i++){
-        output[i] = out[i];
+
+        output[i] = out[i] + 128;
     }
     }"""
         fp.write(string)

@@ -2430,16 +2430,17 @@ void genModel(signed char* data, signed char* output){
             uint8_t g = data[(i * num_col + j) * num_channel + 1];
             uint8_t r = data[(i * num_col + j) * num_channel + 2];
 
-            *input++ = (int)r - 128;
-            *input++ = (int)g - 128;
-            *input++ = (int)b - 128;
+            *input++ = (signed char)r - 128;
+            *input++ = (signed char)g - 128;
+            *input++ = (signed char)b - 128;
         }
     }            
             
     invoke_inf();
-    
-    signed char* out = getOutput();
+
+  signed char* out = getOutput();
     for(int i=0;i<1000;i++){
-        output[i] = out[i];
+        *(output + i) = out[i];
+    }
     }
 }
