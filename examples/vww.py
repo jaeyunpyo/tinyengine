@@ -21,9 +21,16 @@ print("PYTHONPATH:", sys.path)
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../code_generator')))
+# 경로 설정
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+code_generator_dir = os.path.abspath(os.path.join(current_dir, '../code_generator'))
+tflite_dir = os.path.abspath(os.path.join(code_generator_dir, '../tflite'))
 
+# 경로 추가
+sys.path.append(parent_dir)
+sys.path.append(code_generator_dir)
+sys.path.append(tflite_dir)
 
 from code_generator.CodegenUtilTFlite import GenerateSourceFilesFromTFlite
 # from mcunet.mcunet.model_zoo import download_tflite
@@ -32,8 +39,10 @@ from code_generator.CodegenUtilTFlite import GenerateSourceFilesFromTFlite
 # 2: To deploy the model on MCU, we need to first convert the model to an Intermediate Representation (IR) and
 # get the weight parameters and scale parameters.
 # tflite_path = download_tflite(net_id="mcunet-vww1")
-# tflite_path = "D:\\workspace\\tinyengine\\examples\\deit_tiny_patch16_224_int8.tflite"
+# tflite_path = "C:\\workspaces\\tinyengine\\examples\\deit_tiny_patch16_224_int8.tflite"
 tflite_path = "D:\\workspace\\tinyengine\\experimental\\vit\\tflite\\deit_tiny_patch16_224_int8.tflite"
+# tflite_path = "deit_tiny_patch16_224_int8.tflite"
+
 
 # 3. Let's generate source code for on-device deployment
 peakmem = GenerateSourceFilesFromTFlite(

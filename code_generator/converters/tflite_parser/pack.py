@@ -2,13 +2,13 @@
 
 from code_generator.operators.pack import PackOperator
 from .utils import get_input_tensors, get_output_tensors, getTensorTypeStr
-import tflite
+from tflite.PackOptions import PackOptions
 
 def parse_pack(op, model):
     input_tensors = get_input_tensors(op, model)
     output_tensors = get_output_tensors(op, model)
 
-    options = tflite.PackOptions()
+    options = PackOptions()
     options.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
 
     try:
