@@ -52,7 +52,7 @@ class FullyConnectedOperator(basicOperator):
             self._add_input(self.params["bias_idx"], self.params["output_dtype"])
         self._add_output(self.params["output_idx"], self.params["output_dtype"])
 
-        if None in default_params.values():
+        if None in self.params.values():
             warnings.warn(f"parameters are not all set for op {self.params['op']}")
 
     def generate_inference_str(self):

@@ -515,10 +515,10 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         string = "#define PEAK_MEM " + str(schedule.peakmem) + "\n" + "#define MODEL_SIZE " + str(schedule.flash) + "\n"
         fp.write(string + "\n")
 
-        string = "static signed char buffer[" + str(schedule.peakmem) + "];\n"
+        string = "static unsigned char buffer[" + str(schedule.peakmem) + "];\n"
         fp.write(string)
         accumulate_ptr = 0
-        string = "static signed char *buffer0 = &buffer[" + str(accumulate_ptr) + "];\n"
+        string = "static unsigned char *buffer0 = &buffer[" + str(accumulate_ptr) + "];\n"
         accumulate_ptr += int(schedule.buffers["input_output"])
         fp.write(string)
 
@@ -557,12 +557,13 @@ int32_t *int32ptr;
 //float *fptr,*fptr2,*fptr3;
 signed char *fptr,*fptr2,*fptr3;
 
-signed char* getInput() {
+unsigned char* getInput() {
     return &buffer0["""
-            + f"{self.MemSche.layer[0].params['input1_buf_add_offset']}"
+            # + f"{self.MemSche.layer[0].params['input1_buf_add_offset']}"
+            + f"{self.MemSche.layer[0].params['output_buf_add_offset']}"
             + """];
 }
-signed char* getOutput() {
+unsigned char* getOutput() {
     return NNoutput;
 }\n"""
         )
@@ -991,7 +992,7 @@ signed char* getOutput() {
         fp = self.source_handle
         string = """void genModel(unsigned char* data, unsigned char* output){
      /* Convert the OpenCV image from BGR to RGB */
-    signed char* input = getInput();
+    unsigned char* input = getInput();
     int num_row = 224;
     int num_col = 224;
     int num_channel = 3;
@@ -1002,17 +1003,25 @@ signed char* getOutput() {
             uint8_t g = data[(i * num_col + j) * num_channel + 1];
             uint8_t r = data[(i * num_col + j) * num_channel + 2];
 
-            *input++ = (int)r - 128;
-            *input++ = (int)g - 128;
-            *input++ = (int)b - 128;
+            *input++ = (uint8_t)r;
+            *input++ = (uint8_t)g;
+            *input++ = (uint8_t)b;
+            
         }
     }            
-            
+    printf("\\n\\n");
+    for (int i=0;i<num_col;i++)
+        printf("%4d ", data[i]);
+    printf("\\n\\n");
+    unsigned char* test = getInput();
+    for (int i=0;i<num_col;i++)
+        printf("%4d ", test[i]);
+    printf("\\n\\n");        
     invoke_inf();
     
-    signed char* out = getOutput();
+    unsigned char* out = getOutput();
     for(int i=0;i<1000;i++){
-        output[i] = out[i] + 128;
+        output[i] = out[i];
     }
     }"""
         fp.write(string)

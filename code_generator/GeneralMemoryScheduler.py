@@ -521,6 +521,6 @@ class GeneralMemoryScheduler:
 def _find_training_idx(layers):
     idx = len(layers)
     for cnt, l in enumerate(layers):
-        if l.params["op"] in ["CAST"]:
+        if l.params["op"] in ["CAST", "QUANTIZE," "DEQUANTIZE", "RESHAPE", "PACK", "TILE", "STRIDED_SLICE", "TRANSPOSE"]:
             return cnt
     return idx

@@ -5,13 +5,14 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
+#include <numeric> // For std::iota
 
 using namespace std;
 
 // 양자화된 텐서의 덧셈을 수행하는 함수
-void add_fpreq(int length, int8_t* input1, float input1_scale, int input1_zero_point,
-               int8_t* input2, float input2_scale, int input2_zero_point,
-               float output_scale, int output_zero_point, int8_t* output) {
+void add_fpreq(int length, uint8_t* input1, float input1_scale, int input1_zero_point,
+               uint8_t* input2, float input2_scale, int input2_zero_point,
+               float output_scale, int output_zero_point, uint8_t* output) {
     for (int i = 0; i < length; ++i) {
         // 입력 텐서를 실수값으로 변환
         float real_input1 = (input1[i] - input1_zero_point) * input1_scale;
@@ -29,10 +30,10 @@ void add_fpreq(int length, int8_t* input1, float input1_scale, int input1_zero_p
 }
 
 // avg_pooling 함수의 정의
-void avg_pooling(int8_t* input, int input_h, int input_w, int input_c,
+void avg_pooling(uint8_t* input, int input_h, int input_w, int input_c,
                  int filter_h, int filter_w, int stride_h, int stride_w,
                  int pad_h, int pad_w,
-                 int8_t* output) {
+                 uint8_t* output) {
     // 패딩을 포함한 입력 크기 계산
     int padded_input_h = input_h + 2 * pad_h;
     int padded_input_w = input_w + 2 * pad_w;
@@ -141,6 +142,15 @@ void batch_matmul(int8_t* input, int8_t* input2, int8_t* output,
 
 
 // concatenate 함수의 정의
+void concatenate(const int8_t* input1, const int8_t* input2, int size1, int size2, int8_t* output, int axis) {
+    if (axis != 0) {
+        cerr << "Only axis = 0 is supported in this simple implementation." << endl;
+        return;
+    }
+
+    std::memcpy(output, input1, sizeof(int32_t) * size1);
+    std::memcpy(output + size1, input2, sizeof(int32_t) * size2);
+}
 void concatenate(const int32_t* input1, const int32_t* input2, int size1, int size2, int32_t* output, int axis) {
     if (axis != 0) {
         cerr << "Only axis = 0 is supported in this simple implementation." << endl;
@@ -150,14 +160,14 @@ void concatenate(const int32_t* input1, const int32_t* input2, int size1, int si
     std::memcpy(output, input1, sizeof(int32_t) * size1);
     std::memcpy(output + size1, input2, sizeof(int32_t) * size2);
 }
-void concatenate(const signed char* input1, const signed char* input2, int size1, int size2, signed char* output, int axis) {
+void concatenate(const uint8_t* input1, const uint8_t* input2, int size1, int size2, uint8_t* output, int axis) {
     if (axis != 0) {
         cerr << "Only axis = 0 is supported in this simple implementation." << endl;
         return;
     }
 
-    std::memcpy(output, input1, sizeof(signed char) * size1);
-    std::memcpy(output + size1, input2, sizeof(signed char) * size2);
+    std::memcpy(output, input1, sizeof(uint8_t) * size1);
+    std::memcpy(output + size1, input2, sizeof(uint8_t) * size2);
 }
 
 // printf("/* layer 5:CONV_2D */\n");
@@ -170,10 +180,10 @@ void concatenate(const signed char* input1, const signed char* input2, int size1
 //     sbuf);
 // conv2d_16x16_fpreq 함수의 정의
 #include <immintrin.h>  // For AVX2 instructions
-void conv2d_16x16_fpreq(const int8_t* input, int input_w, int input_h, int input_c,
+void conv2d_16x16_fpreq(const uint8_t* input, int input_w, int input_h, int input_c,
                         const int8_t* weights, const int32_t* bias, const float* scales,
                         int output_w, int output_h, int output_c,
-                        int8_t* output, int stride, int pad, 
+                        uint8_t* output, int stride, int pad, 
                         int input_zero_point, int output_zero_point, int min_val, int max_val, 
                         int16_t* sbuf)
 {
@@ -310,7 +320,7 @@ void fully_connected(const int8_t* input, const int8_t* weights, const int8_t* b
 }
 
 // gather 함수의 정의
-void gather(const signed char* input, const signed char* indices, signed char* output, int num_indices, int input_size) {
+void gather(const uint8_t* input, const uint8_t* indices, uint8_t* output, int num_indices, int input_size) {
     if (indices == nullptr) {
         // indices 값이 Null인 경우 입력 배열을 그대로 출력 배열로 복사
         for (int i = 0; i < input_size; ++i) {
@@ -421,7 +431,7 @@ void pack(const T* input1, const T* input2, const T* input3, const T* input4, T*
 }
 
 // placeholder_for_greater_op_codes 함수의 정의
-void placeholder_for_greater_op_codes(const int8_t* input, int8_t* output, int input_dim1, int input_dim2) {
+void placeholder_for_greater_op_codes(const uint8_t* input, uint8_t* output, int input_dim1, int input_dim2) {
     // 입력 텐서를 출력 텐서로 단순히 복사하는 기본 구현
     for (int i = 0; i < input_dim1; ++i) {
         for (int j = 0; j < input_dim2; ++j) {
@@ -478,7 +488,7 @@ void reduce_prod_int32(const int32_t* input, int32_t* output,
 }
 
 // rsqrt 함수의 정의 
-void rsqrt(const signed char* input, signed char* output, int rows, int cols) {
+void rsqrt(const int8_t* input, int8_t* output, int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             int index = i * cols + j;
@@ -488,10 +498,17 @@ void rsqrt(const signed char* input, signed char* output, int rows, int cols) {
 }
 
 // shape 함수의 정의
-template <typename InputType, typename OutputType>
-void shape(const InputType* input, OutputType* output, int num_dims) {
-    std::memcpy(output, input, num_dims * sizeof(OutputType));
+void shape(const int* input_tensor, int num_dimensions, int8_t* output_tensor) {
+    // input_tensor: 입력 텐서의 shape 정보를 나타내는 배열입니다.
+    // num_dimensions: 입력 텐서의 차원 수입니다.
+    // output_tensor: 출력 텐서로, shape 정보를 저장할 배열입니다.
+
+    // 입력 텐서의 shape 정보를 출력 텐서에 복사합니다.
+    for (int i = 0; i < num_dimensions; ++i) {
+        output_tensor[i] = input_tensor[i];
+    }
 }
+
 
 // 고정 소수점 기반 소프트맥스 함수
 void softmax(const int8_t* input, int8_t* output, int batch_size, int num_classes, int beta) {
@@ -532,7 +549,7 @@ void softmax(const int8_t* input, int8_t* output, int batch_size, int num_classe
 // 1, 
 // 197)
 // squared_difference 함수의 정의
-void squared_difference(const signed char* input1, const signed char* input2, signed char* output, int rows, int cols) {
+void squared_difference(const int8_t* input1, const int8_t* input2, int8_t* output, int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             int index = i * cols + j;
@@ -542,55 +559,102 @@ void squared_difference(const signed char* input1, const signed char* input2, si
     }
 }
 
-// strided_slice_4Dto4D_int32 함수 정의
-void strided_slice_4Dto4D_int32(const int32_t* input, int d1, int d2, int d3, int d4,
-                                const uint16_t* begin, const uint16_t* end, const uint16_t* strides,
-                                int32_t* output, int o_d1, int o_d2, int o_d3, int o_d4) {
-    int input_shape[] = {d1, d2, d3, d4};
-    int output_shape[] = {o_d1, o_d2, o_d3, o_d4};
-    int input_strides[4] = {d2 * d3 * d4, d3 * d4, d4, 1};
-    int output_strides[4] = {o_d2 * o_d3 * o_d4, o_d3 * o_d4, o_d4, 1};
+// float32 타입을 위한 strided slice 함수
+void strided_slice_4Dto4D(const float* input, int d1, int d2, int d3, int d4,
+                              const int* begin, const int* end, const int* strides,
+                              float* output, int o_d1, int o_d2, int o_d3, int o_d4,
+                              int begin_mask, int end_mask, int ellipsis_mask,
+                              int new_axis_mask, int shrink_axis_mask) {
+    // 구현 로직
+    // 여기서는 간단히 입력 텐서의 일부를 출력 텐서로 복사하는 예제를 제공합니다.
+    int input_size = d1 * d2 * d3 * d4;
+    int output_size = o_d1 * o_d2 * o_d3 * o_d4;
 
-    for (int i = 0; i < o_d1; ++i) {
-        for (int j = 0; j < o_d2; ++j) {
-            for (int k = 0; k < o_d3; ++k) {
-                for (int l = 0; l < o_d4; ++l) {
-                    int input_idx = (begin[0] + i * strides[0]) * input_strides[0] +
-                                    (begin[1] + j * strides[1]) * input_strides[1] +
-                                    (begin[2] + k * strides[2]) * input_strides[2] +
-                                    (begin[3] + l * strides[3]) * input_strides[3];
-                    int output_idx = i * output_strides[0] + j * output_strides[1] + k * output_strides[2] + l * output_strides[3];
-                    output[output_idx] = input[input_idx];
-                }
-            }
+    for (int i = 0; i < output_size; ++i) {
+        int idx = begin[0] + i * strides[0];
+        if (idx < end[0]) {
+            output[i] = input[idx];
+        } else {
+            break;
         }
     }
 }
 
-// strided_slice_4Dto4D_int8 함수 정의
+// int8 타입을 위한 strided slice 함수
 void strided_slice_4Dto4D_int8(const int8_t* input, int d1, int d2, int d3, int d4,
-                               const uint16_t* begin, const uint16_t* end, const uint16_t* strides,
-                               int8_t* output, int o_d1, int o_d2, int o_d3, int o_d4) {
-    int input_shape[] = {d1, d2, d3, d4};
-    int output_shape[] = {o_d1, o_d2, o_d3, o_d4};
-    int input_strides[4] = {d2 * d3 * d4, d3 * d4, d4, 1};
-    int output_strides[4] = {o_d2 * o_d3 * o_d4, o_d3 * o_d4, o_d4, 1};
+                               const int8_t* begin, const int8_t* end, const int8_t* strides,
+                               int8_t* output, int o_d1, int o_d2, int o_d3, int o_d4,
+                               int begin_mask, int end_mask, int ellipsis_mask,
+                               int new_axis_mask, int shrink_axis_mask) {
+    // Helper function to apply masks
+    auto apply_mask = [begin_mask, end_mask](int idx, int dim, int mask, int bit) {
+        return (mask & (1 << bit)) ? (mask == begin_mask ? 0 : dim) : idx;
+    };
 
-    for (int i = 0; i < o_d1; ++i) {
-        for (int j = 0; j < o_d2; ++j) {
-            for (int k = 0; k < o_d3; ++k) {
-                for (int l = 0; l < o_d4; ++l) {
-                    int input_idx = (begin[0] + i * strides[0]) * input_strides[0] +
-                                    (begin[1] + j * strides[1]) * input_strides[1] +
-                                    (begin[2] + k * strides[2]) * input_strides[2] +
-                                    (begin[3] + l * strides[3]) * input_strides[3];
-                    int output_idx = i * output_strides[0] + j * output_strides[1] + k * output_strides[2] + l * output_strides[3];
-                    output[output_idx] = input[input_idx];
+    // Initialize the start, stop, and stride arrays
+    int start[4] = {0};
+    int stop[4] = {0};
+    int stride[4] = {0};
+    int dims[4] = {d1, d2, d3, d4};
+
+    for (int i = 0; i < 4; ++i) {
+        start[i] = apply_mask(begin[i], dims[i], begin_mask, i);
+        stop[i] = apply_mask(end[i], dims[i], end_mask, i);
+        stride[i] = strides[i];
+    }
+
+    // Perform the slice
+    int out_index = 0;
+    for (int i = start[0]; i < stop[0]; i += stride[0]) {
+        for (int j = start[1]; j < stop[1]; j += stride[1]) {
+            for (int k = start[2]; k < stop[2]; k += stride[2]) {
+                for (int l = start[3]; l < stop[3]; l += stride[3]) {
+                    int in_index = i * d2 * d3 * d4 + j * d3 * d4 + k * d4 + l;
+                    output[out_index++] = input[in_index];
                 }
             }
         }
     }
 }
+
+void strided_slice_4Dto4D_int32(const int32_t* input, int d1, int d2, int d3, int d4,
+                                    const int* begin, const int* end, const int* strides,
+                                    int32_t* output, int o_d1, int o_d2, int o_d3, int o_d4,
+                                    int begin_mask, int end_mask, int ellipsis_mask,
+                                    int new_axis_mask, int shrink_axis_mask) {
+        // 입력 텐서와 출력 텐서의 차원 수 계산
+        int input_dims[4] = {d1, d2, d3, d4};
+        int output_dims[4] = {o_d1, o_d2, o_d3, o_d4};
+
+        // 슬라이싱 루프
+        for (int i = 0; i < o_d1; ++i) {
+            for (int j = 0; j < o_d2; ++j) {
+                for (int k = 0; k < o_d3; ++k) {
+                    for (int l = 0; l < o_d4; ++l) {
+                        // 계산된 인덱스
+                        int in_i = begin[0] + i * strides[0];
+                        int in_j = begin[1] + j * strides[1];
+                        int in_k = begin[2] + k * strides[2];
+                        int in_l = begin[3] + l * strides[3];
+
+                        // 범위 검사
+                        if (in_i >= end[0] || in_j >= end[1] || in_k >= end[2] || in_l >= end[3]) {
+                            continue;
+                        }
+
+                        // 1D 인덱스로 변환
+                        int input_index = ((in_i * input_dims[1] + in_j) * input_dims[2] + in_k) * input_dims[3] + in_l;
+                        int output_index = ((i * output_dims[1] + j) * output_dims[2] + k) * output_dims[3] + l;
+
+                        // 출력 텐서에 값 복사
+                        output[output_index] = input[input_index];
+                    
+                }
+            }
+        }
+    }
+}
+
 
 // sub_int8 함수의 정의
 void sub_int8(int size, const int8_t* input1, int input1_zero_point, int input1_multiplier, int input1_shift,
@@ -647,5 +711,35 @@ void tile_3D_int8(const int8_t* input, int input_h, int input_w, int input_c,
                 output[output_index] = input[input_index];
             }
         }
+    }
+}
+
+// void quantize(const uint8_t* input, int8_t* output, float scale, int zero_point, int size ) {
+//     for (int i = 0; i < size; ++i) {
+//         // int32_t quantized = std::round((input[i] - zero_point) * scale);
+//         // output[i] = std::max(0, std::min(255, quantized));
+//         int32_t quantized = std::round(input[i] / scale) + zero_point;
+//         output[i] = std::max(-128, std::min(127, quantized));
+//     }
+// }
+
+void quantize(const uint8_t* input_buffer, int8_t* output_buffer, float scale, int zero_point, int buffer_size) {
+    for (int i = 0; i < buffer_size; ++i) {
+        // Apply the quantization formula
+        float dequantized_value = static_cast<float>(input_buffer[i]) - static_cast<float>(zero_point);
+        int32_t quantized_value = static_cast<int32_t>(std::round(dequantized_value / scale));
+
+        // Clip the value to int8 range [-128, 127]
+        quantized_value = std::max(-128, std::min(127, quantized_value));
+
+        // Store the quantized value in the output buffer
+        output_buffer[i] = static_cast<int8_t>(quantized_value);
+    }
+}
+
+void quantize(const int8_t* input, uint8_t* output, float scale, int zero_point, int size ) {
+    for (int i = 0; i < size; ++i) {
+        int32_t quantized = std::round((input[i] - zero_point) * scale);
+        output[i] = std::max(0, std::min(255, quantized));
     }
 }

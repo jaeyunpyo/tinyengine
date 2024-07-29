@@ -22,3 +22,4 @@ from .fully_connected import parse_fully_connected
 from .batch_matmul import parse_batch_matmul
 from .softmax import parse_softmax
 from .placeholder_for_greater_op_codes import parse_placeholder_for_greater_op_codes
+from .quantize import parse_quantize

@@ -1,25 +1,40 @@
 from code_generator.operators.strided_slice_v2 import StridedSliceOperator
 from .utils import get_input_tensors, get_output_tensors, getTensorTypeStr
-import tflite
+from tflite.StridedSliceOptions import StridedSliceOptions
 
 def parse_strided_slice(op, model):
+    # get_input_tensors 
+    # op.InputsAsNumpy() == tensor_index_list -> _get_wrapper_tensors -> TFLiteTensorWrapper
     input_tensors = get_input_tensors(op, model)
     output_tensors = get_output_tensors(op, model)
-
-    input_shapes = [tensor.tensor.ShapeAsNumpy().tolist() for tensor in input_tensors]
+        
+    # 입력 텐서의 shape 정보 추출
+    input_shapes = []
+    for input_tensor in input_tensors:
+        shape = input_tensor.tensor.ShapeAsNumpy().tolist()
+        input_shapes.append(shape)
+        # print(f"Shape: {shape}")
+    
     output_shape = output_tensors[0].tensor.ShapeAsNumpy().tolist()
 
-    # Ensure the shapes have 4 dimensions
-    input_shapes = [shape + [1] * (4 - len(shape)) for shape in input_shapes]
+    # Ensure the shapes are correctly formatted
+    # input_shape = input_shapes[0]
+    d1 = input_shapes[0][0]
+    d2 = input_shapes[1][0]
+    d3 = input_shapes[2][0]
+    d4 = input_shapes[3][0]
+    
     if len(output_shape) < 4:
         output_shape += [1] * (4 - len(output_shape))
 
     # Parse options
-    options = tflite.StridedSliceOptions()
+    options = StridedSliceOptions()
     options.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
 
     begin_mask = options.BeginMask()
     end_mask = options.EndMask()
+    ellipsis_mask = options.EllipsisMask()
+    new_axis_mask = options.NewAxisMask()
     shrink_axis_mask = options.ShrinkAxisMask()
 
     # Manually extract begin, end, and strides
@@ -39,10 +54,10 @@ def parse_strided_slice(op, model):
         "output_dtype": getTensorTypeStr(output_tensors[0].tensor.Type()),
         "input_shape": input_shapes[0],
         "output_shape": output_shape,
-        "d1": input_shapes[0][0],
-        "d2": input_shapes[0][1],
-        "d3": input_shapes[0][2],
-        "d4": input_shapes[0][3],
+        "d1": d1,
+        "d2": d2,
+        "d3": d3,
+        "d4": d4,
         "o_d1": output_shape[0],
         "o_d2": output_shape[1],
         "o_d3": output_shape[2],
@@ -52,6 +67,8 @@ def parse_strided_slice(op, model):
         "strides": strides,
         "begin_mask": begin_mask,
         "end_mask": end_mask,
+        "ellipsis_mask": ellipsis_mask,
+        "new_axis_mask": new_axis_mask,
         "shrink_axis_mask": shrink_axis_mask
     }
 

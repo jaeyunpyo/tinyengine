@@ -28,7 +28,7 @@ class ReduceProdOperator(basicOperator):
         ReduceProdOperator._instance_counter += 1
         self.reduction_axes_var_declared = False
 
-        if None in default_params.values():
+        if None in self.params.values():
             warnings.warn(f"parameters are not all set for op {self.params['op']}")
 
     def generate_inference_str(self):

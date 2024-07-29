@@ -18,7 +18,10 @@ class TFLiteTensorWrapper:
 
 def getOpCodeStr(op, model: Model.Model):
     op_code_list_idx = op.OpcodeIndex()
-    op_code_id = model.OperatorCodes(op_code_list_idx).DeprecatedBuiltinCode()
+    op_code_id = model.OperatorCodes(op_code_list_idx).BuiltinCode()
+    
+    if op_code_id == 150:   # CAST
+        return "UNKNOWN" 
 
     def _build_str_map(obj):
         ret = {}

@@ -26,7 +26,7 @@ class ConcatenationOperator(basicOperator):
         if self.params["output_idx"] is not None:
             self._add_output(self.params["output_idx"], self.params["output_dtype"])
 
-        if None in default_params.values():
+        if None in self.params.values():
             warnings.warn(f"parameters are not all set for op {self.params['op']}")
             
     def _get_input_size(self, shape):

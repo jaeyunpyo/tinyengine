@@ -33,18 +33,6 @@ int main() {
 
     file.close();
 
-    // // 이미지 데이터 사용 예제 (예: 첫 번째 픽셀 출력)
-    // std::cout << "First pixel: "
-    //           << static_cast<int>(image[0]) << " "
-    //           << static_cast<int>(image[1]) << " "
-    //           << static_cast<int>(image[2]) << std::endl;
-    
-    // // 랜덤 입력 데이터를 생성합니다.
-    // std::srand(std::time(0));  // 랜덤 시드 설정
-    // for (int i = 0; i < INPUT_SIZE; ++i) {
-    //     random_buffer[i] = std::rand() % 256;  // -128 ~ 127 범위의 랜덤 값
-    // }
-
     // 모델을 호출하여 추론을 수행합니다.
     genModel(random_buffer, output);
 

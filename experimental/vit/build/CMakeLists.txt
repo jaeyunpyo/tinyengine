@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx -mavx2")
 set(SOURCES
     main.cpp
     genModel.c
+    genModel.h
 )
 
 # C 소스 파일을 C++로 처리

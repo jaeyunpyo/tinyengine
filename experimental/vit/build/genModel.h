@@ -1,16 +1,16 @@
 #include <stdint.h>
 void genModel(unsigned char* data, unsigned char* output);
 
-#define NNoutput &buffer0[4765248];
+#define NNoutput &buffer0[150528];
 
-/* sram:5447360, flash:148992 */
-#define PEAK_MEM 5447360
+/* sram:622516, flash:148992 */
+#define PEAK_MEM 622516
 #define MODEL_SIZE 148992
 
-static signed char buffer[5447360];
-static signed char *buffer0 = &buffer[0];
-static int16_t *sbuf = (int16_t *)&buffer[4976576];
-static int16_t *kbuf = (int16_t *)&buffer[5152448];
+static unsigned char buffer[622516];
+static unsigned char *buffer0 = &buffer[0];
+static int16_t *sbuf = (int16_t *)&buffer[151732];
+static int16_t *kbuf = (int16_t *)&buffer[327604];
 const int SBuffer_size = 175872;
 const int KBuffer_size = 294912;
 

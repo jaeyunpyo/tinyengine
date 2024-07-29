@@ -167,11 +167,13 @@ sprintf(buf, \""""
 
         cast_type = "float"
         if dtype == "int8":
-            cast_type = "signed char"
+            cast_type = "int8_t"
         elif dtype == "bool":
             cast_type = "bool"
         elif dtype == "int32":
             cast_type = "int32_t"
+        elif dtype == "uint8":
+            cast_type = "uint8_t"
         cast_str = f"({cast_type}*)"
 
         ret += cast_str
@@ -203,6 +205,7 @@ class tensor:
         "int32": 4,
         "fp32": 4,
         "float32": 4,
+        "uint8": 1,
     }
 
     def __init__(self, graph_idx, dtype, dims) -> None:
