@@ -501,7 +501,7 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         fp = self.header_handle
         fp.write(string)
         
-        string = "void genModel(unsigned char* data, unsigned char* output);\n"
+        string = "void genModel(int8_t* data, int8_t* output);\n"
         fp.write(string)
                 
         schedule = self.MemSche
@@ -515,10 +515,10 @@ void invoke_1patch(uint16_t pad_t, uint16_t pad_b, uint16_t pad_l ,uint16_t pad_
         string = "#define PEAK_MEM " + str(schedule.peakmem) + "\n" + "#define MODEL_SIZE " + str(schedule.flash) + "\n"
         fp.write(string + "\n")
 
-        string = "static unsigned char buffer[" + str(schedule.peakmem) + "];\n"
+        string = "static int8_t buffer[" + str(schedule.peakmem) + "];\n"
         fp.write(string)
         accumulate_ptr = 0
-        string = "static unsigned char *buffer0 = &buffer[" + str(accumulate_ptr) + "];\n"
+        string = "static int8_t *buffer0 = &buffer[" + str(accumulate_ptr) + "];\n"
         accumulate_ptr += int(schedule.buffers["input_output"])
         fp.write(string)
 
@@ -557,13 +557,13 @@ int32_t *int32ptr;
 //float *fptr,*fptr2,*fptr3;
 signed char *fptr,*fptr2,*fptr3;
 
-unsigned char* getInput() {
+int8_t* getInput() {
     return &buffer0["""
             # + f"{self.MemSche.layer[0].params['input1_buf_add_offset']}"
             + f"{self.MemSche.layer[0].params['output_buf_add_offset']}"
             + """];
 }
-unsigned char* getOutput() {
+int8_t* getOutput() {
     return NNoutput;
 }\n"""
         )
@@ -990,22 +990,22 @@ unsigned char* getOutput() {
         
     def _genGenModel(self):
         fp = self.source_handle
-        string = """void genModel(unsigned char* data, unsigned char* output){
+        string = """void genModel(int8_t* data, int8_t* output){
      /* Convert the OpenCV image from BGR to RGB */
-    unsigned char* input = getInput();
+    int8_t* input = getInput();
     int num_row = 224;
     int num_col = 224;
     int num_channel = 3;
     
     for (int i = 0; i < num_row; i++) {
         for (int j = 0; j < num_col; j++) {
-            uint8_t b = data[(i * num_col + j) * num_channel + 0];
-            uint8_t g = data[(i * num_col + j) * num_channel + 1];
-            uint8_t r = data[(i * num_col + j) * num_channel + 2];
+            int8_t b = data[(i * num_col + j) * num_channel + 0];
+            int8_t g = data[(i * num_col + j) * num_channel + 1];
+            int8_t r = data[(i * num_col + j) * num_channel + 2];
 
-            *input++ = (uint8_t)r;
-            *input++ = (uint8_t)g;
-            *input++ = (uint8_t)b;
+            *input++ = (int8_t)r;
+            *input++ = (int8_t)g;
+            *input++ = (int8_t)b;
             
         }
     }            
@@ -1013,13 +1013,13 @@ unsigned char* getOutput() {
     for (int i=0;i<num_col;i++)
         printf("%4d ", data[i]);
     printf("\\n\\n");
-    unsigned char* test = getInput();
+    int8_t* test = getInput();
     for (int i=0;i<num_col;i++)
         printf("%4d ", test[i]);
     printf("\\n\\n");        
     invoke_inf();
     
-    unsigned char* out = getOutput();
+    int8_t* out = getOutput();
     for(int i=0;i<1000;i++){
         output[i] = out[i];
     }

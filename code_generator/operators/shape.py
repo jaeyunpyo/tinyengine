@@ -34,7 +34,7 @@ class ShapeOperator(basicOperator):
             inference_str = f"const int {shape_var_name}[] = {{{shape_str}}};\n"
         elif self.params["input_dtype"] == "int32":
             inference_str = f"const int {shape_var_name}[] = {{{shape_str}}};\n"
-        inference_str += f"shape({shape_var_name}, {len(self.shape)}, {output_buffer});\n"
+        inference_str += f"shape({shape_var_name}, {len(self.shape)}, (int*){output_buffer});\n"
         
         # Increment shape value count for unique variable names
         ShapeOperator.ss_cnt += 1

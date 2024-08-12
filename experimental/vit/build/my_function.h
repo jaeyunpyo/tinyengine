@@ -7,68 +7,85 @@
 #include <limits>
 #include <numeric> // For std::iota
 
+typedef int8_t q7_t;
+typedef uint8_t q8_t;
+typedef int16_t q15_t;
+typedef uint16_t q16_t;
+typedef int32_t q31_t;
+typedef uint32_t q32_t;
+
+typedef struct add_params {
+    int input_h, input_w, input_c, left_shift;
+    int input1_offset, input1_multiplier, input1_shift;
+    int input2_offset, input2_multiplier, input2_shift;
+    int output_offset, output_multiplier, output_shift;
+    int quantized_activation_max, quantized_activation_min;
+
+} ADD_params;
 using namespace std;
 
 // 양자화된 텐서의 덧셈을 수행하는 함수
-void add_fpreq(int length, uint8_t* input1, float input1_scale, int input1_zero_point,
-               uint8_t* input2, float input2_scale, int input2_zero_point,
-               float output_scale, int output_zero_point, uint8_t* output) {
-    for (int i = 0; i < length; ++i) {
-        // 입력 텐서를 실수값으로 변환
-        float real_input1 = (input1[i] - input1_zero_point) * input1_scale;
-        float real_input2 = (input2[i] - input2_zero_point) * input2_scale;
-
-        // 두 입력 텐서를 더함
-        float real_output = real_input1 + real_input2;
-
-        // 결과를 양자화된 값으로 변환
-        int32_t quantized_output = static_cast<int32_t>(std::round(real_output / output_scale)) + output_zero_point;
-
-        // 출력 범위를 -128에서 127 사이로 제한
-        output[i] = static_cast<int8_t>(std::max(-128, std::min(127, quantized_output)));
+// tinyengine
+void add_fpreq(int size, const int8_t* input1_data, const float input1_scale, const float input1_zero,
+                            const int8_t* input2_data, const float input2_scale, const float input2_zero,
+                            const float output_scale, const float zero_y, int8_t* output_data) {
+    for (int i = 0; i < size; ++i) {
+        float input1_fp = ((float)*input1_data++ - input1_zero) * input1_scale;
+        float input2_fp = ((float)*input2_data++ - input2_zero) * input2_scale;
+        int clamped_output =
+            (int)round((input1_fp + input2_fp) / output_scale + zero_y);  // to align with tvm implementation
+        clamped_output = TN_MAX(clamped_output, -128);
+        clamped_output = TN_MIN(clamped_output, 127);
+        output_data[i] = (int8_t)(clamped_output);
     }
+
+    //return STATE_SUCCESS;
 }
 
 // avg_pooling 함수의 정의
-void avg_pooling(uint8_t* input, int input_h, int input_w, int input_c,
-                 int filter_h, int filter_w, int stride_h, int stride_w,
-                 int pad_h, int pad_w,
-                 uint8_t* output) {
-    // 패딩을 포함한 입력 크기 계산
-    int padded_input_h = input_h + 2 * pad_h;
-    int padded_input_w = input_w + 2 * pad_w;
+// tinyen
+// void avg_pooling(uint8_t* input, int input_h, int input_w, int input_c,
+//                  int filter_h, int filter_w, int stride_h, int stride_w,
+//                  int pad_h, int pad_w,
+//                  uint8_t* output) {
+// avg_pooling(&buffer0[150528], 192,1,197, 
+//             192,1,1,1,
+//             0,0,
+//             &buffer0[37824]);
+void avg_pooling(const int8_t* input, const uint16_t input_h, const uint16_t input_w, const uint16_t input_c,
+                              const uint16_t sample_h, const uint16_t sample_w, const uint16_t output_h,
+                              const uint16_t output_w, const int32_t out_activation_min,
+                              const int32_t out_activation_max, int8_t* output) {
+    int h, w, c;
+    int sh, sw;
+    const int divider_half = ((sample_h * sample_w) / 2);
+    for (c = 0; c < input_c; c++) {
+        for (h = 0; h < output_h; h++) {
+            for (w = 0; w < output_w; w++) {
+                int avg = 0;
 
-    // 출력 크기 계산
-    int output_h = (padded_input_h - filter_h) / stride_h + 1;
-    int output_w = (padded_input_w - filter_w) / stride_w + 1;
-
-    // 입력 텐서를 순회하면서 평균 풀링 연산 수행
-    for (int h = 0; h < output_h; ++h) {
-        for (int w = 0; w < output_w; ++w) {
-            for (int c = 0; c < input_c; ++c) {
-                int32_t sum = 0;
-                for (int fh = 0; fh < filter_h; ++fh) {
-                    for (int fw = 0; fw < filter_w; ++fw) {
-                        int ih = h * stride_h + fh - pad_h;
-                        int iw = w * stride_w + fw - pad_w;
-                        if (ih < 0 || ih >= input_h || iw < 0 || iw >= input_w) {
-                            // 패딩 값 사용 (0으로 가정)
-                            sum += 0;
-                        } else {
-                            sum += input[(ih * input_w + iw) * input_c + c];
-                        }
+                for (sh = 0; sh < sample_h; sh++) {
+                    int height = sh + h * sample_h;
+                    for (sw = 0; sw < sample_w; sw++) {
+                        int width = sw + w * sample_w;
+                        avg += input[(width + height * input_w) * input_c + c];
                     }
                 }
-                // 평균 값 계산
-                int filter_area = filter_h * filter_w;
-                int32_t avg = sum / filter_area;
-                // 값 제한 (클램핑)
-                avg = std::max(-128, std::min(127, avg));
-                // 출력에 저장
-                output[(h * output_w + w) * input_c + c] = static_cast<int8_t>(avg);
+
+                // for rounded div
+                if (avg > 0)
+                    avg += divider_half;
+                else
+                    avg -= divider_half;
+
+                int out = avg / (sample_h * sample_w);
+                out = TN_MAX(out, out_activation_min);
+                out = TN_MIN(out, out_activation_max);
+                output[(w + h * output_w) * input_c + c] = out;
             }
         }
     }
+    //return STATE_SUCCESS;
 }
 
 // batch_matmul 함수의 정의
@@ -79,63 +96,31 @@ void batch_matmul(int8_t* input, int8_t* input2, int8_t* output,
                   float input_scale, float input2_scale, float output_scale,
                   int input_shift, int input2_shift, int output_shift,
                   int input_multiplier, int input2_multiplier, int output_multiplier) {
-    for (int b = 0; b < batch_size; ++b) {
-        int8_t* A = input + b * M * K;
-        int8_t* B = input2 + b * K * N;
-        int8_t* C = output + b * M * N;
-
-        // Transpose A if adj_x is true
-        int8_t* tempA = nullptr;
-        if (adj_x) {
-            tempA = new int8_t[M * K];
-            for (int i = 0; i < M; ++i) {
-                for (int j = 0; j < K; ++j) {
-                    tempA[j * M + i] = A[i * K + j];
-                }
-            }
-            A = tempA;
-            std::swap(M, K);
-        }
-
-        // Transpose B if adj_y is true
-        int8_t* tempB = nullptr;
-        if (adj_y) {
-            tempB = new int8_t[K * N];
-            for (int i = 0; i < K; ++i) {
-                for (int j = 0; j < N; ++j) {
-                    tempB[j * K + i] = B[i * N + j];
-                }
-            }
-            B = tempB;
-            std::swap(K, N);
-        }
-
-        // Initialize C to zero
-        std::memset(C, 0, sizeof(int8_t) * M * N);
-
-        // Perform matrix multiplication
-        for (int i = 0; i < M; ++i) {
-            for (int j = 0; j < N; ++j) {
-                int32_t sum = 0; // Use int32_t to accumulate results to avoid overflow
+    for (int batch = 0; batch < batch_size; ++batch) {
+        for (int m = 0; m < M; ++m) {
+            for (int n = 0; n < N; ++n) {
+                int32_t acc = 0;
                 for (int k = 0; k < K; ++k) {
-                    int32_t a_val = A[i * K + k] - input_zero_point;
-                    int32_t b_val = B[k * N + j] - input2_zero_point;
-                    sum += a_val * b_val;
-                }
-                // Quantize the accumulated result back to int8_t
-                float scaled_sum = sum * input_scale * input2_scale / output_scale;
-                int32_t quantized_output = static_cast<int32_t>(round(scaled_sum)) + output_zero_point;
-                quantized_output = std::min(std::max(quantized_output, -128), 127);
-                C[i * N + j] = static_cast<int8_t>(quantized_output);
-            }
-        }
+                    int a_index = adj_x ? (batch * M * K + k * M + m) : (batch * M * K + m * K + k);
+                    int b_index = adj_y ? (batch * K * N + n * K + k) : (batch * K * N + k * N + n);
+                    
+                    int32_t a_val = input[a_index] - input_zero_point;
+                    int32_t b_val = input2[b_index] - input2_zero_point;
 
-        // Clean up temporary arrays
-        if (adj_x) {
-            delete[] A;
-        }
-        if (adj_y) {
-            delete[] B;
+                    // Quantize multiplication
+                    a_val = ((a_val * input_multiplier) + (1 << (input_shift - 1))) >> input_shift;
+                    b_val = ((b_val * input2_multiplier) + (1 << (input2_shift - 1))) >> input2_shift;
+
+                    acc += a_val * b_val;
+                }
+                
+                // Quantize the accumulator
+                acc = ((acc * output_multiplier) + (1 << (output_shift - 1))) >> output_shift;
+                acc += output_zero_point;
+                acc = std::max(std::min(acc, 127), -128);  // Clamp to int8 range
+
+                output[batch * M * N + m * N + n] = static_cast<int8_t>(acc);
+            }
         }
     }
 }
@@ -180,10 +165,10 @@ void concatenate(const uint8_t* input1, const uint8_t* input2, int size1, int si
 //     sbuf);
 // conv2d_16x16_fpreq 함수의 정의
 #include <immintrin.h>  // For AVX2 instructions
-void conv2d_16x16_fpreq(const uint8_t* input, int input_w, int input_h, int input_c,
+void conv2d_16x16_fpreq(const int8_t* input, int input_w, int input_h, int input_c,
                         const int8_t* weights, const int32_t* bias, const float* scales,
                         int output_w, int output_h, int output_c,
-                        uint8_t* output, int stride, int pad, 
+                        int8_t* output, int stride, int pad, 
                         int input_zero_point, int output_zero_point, int min_val, int max_val, 
                         int16_t* sbuf)
 {
@@ -195,10 +180,11 @@ void conv2d_16x16_fpreq(const uint8_t* input, int input_w, int input_h, int inpu
     std::fill(sbuf, sbuf + padded_input_w * padded_input_h * input_c, input_zero_point);
 
     // 패딩을 적용하여 입력을 임시 버퍼에 복사합니다.
+    // (1,3,224,224) -> (1,224,224,3)
     for (int c = 0; c < input_c; ++c) {
         for (int h = 0; h < input_h; ++h) {
             for (int w = 0; w < input_w; ++w) {
-                sbuf[(c * padded_input_h + (h + pad)) * padded_input_w + (w + pad)] = input[c * input_h * input_w + h * input_w + w];
+                sbuf[(c * padded_input_h + (h + pad)) * padded_input_w + (w + pad)] = input[(h * input_w + w) * input_c + c];
             }
         }
     }
@@ -264,6 +250,10 @@ void conv2d_16x16_fpreq(const uint8_t* input, int input_w, int input_h, int inpu
             }
         }
     }
+
+    // 출력 형상을 출력합니다.
+    std::cout << "Output shape: (1, " << output_h << ", " << output_w << ", " << output_c << ")\n";
+
 }
 
 
@@ -291,11 +281,8 @@ void fully_connected(const int8_t* input, const int8_t* weights, const int8_t* b
                      int input_multiplier, int weight_multiplier, int output_multiplier,
                      int input_shift, int weight_shift, int output_shift,
                      int activation, int input_size, int output_size) {
-    // 출력을 0으로 초기화
-    std::memset(output, 0, sizeof(int8_t) * output_size);
-
     for (int out_idx = 0; out_idx < output_size; ++out_idx) {
-        int32_t acc = (bias != nullptr) ? bias[out_idx] : 0;
+        int32_t acc = 0;
 
         for (int in_idx = 0; in_idx < input_size; ++in_idx) {
             int32_t input_val = input[in_idx] - input_zero_point;
@@ -303,40 +290,39 @@ void fully_connected(const int8_t* input, const int8_t* weights, const int8_t* b
             acc += input_val * weight_val;
         }
 
-        // 양자화된 값으로 변환
-        float scaled_acc = acc * input_scale * weight_scale / output_scale;
-        int32_t quantized_output = static_cast<int32_t>(round(scaled_acc)) + output_zero_point;
-
-        // 값 제한 (클램핑)
-        if (activation == 1) { // Assuming 1 represents ReLU
-            quantized_output = std::max(0, quantized_output);
+        if (bias) {
+            acc += bias[out_idx];
         }
 
-        quantized_output = std::min(127, std::max(-128, quantized_output));
-        output[out_idx] = static_cast<int8_t>(quantized_output);
+        float real_multiplier = input_scale * weight_scale / output_scale;
+        acc = static_cast<int32_t>(std::round(acc * real_multiplier));
 
-        // printf("acc: %d, sca_acc: %0.2lf, out: %d\n", acc, scaled_acc, quantized_output);
+        acc = acc + output_zero_point;
+
+        if (activation == 0) {
+            // No activation
+        } else if (activation == 1) {
+            // ReLU activation
+            acc = std::max(0, acc);
+        } else if (activation == 2) {
+            // ReLU6 activation
+            acc = std::max(0, std::min(6, acc));
+        }
+
+        acc = std::min(std::max(acc, -127), 127);
+        output[out_idx] = static_cast<int8_t>(acc);
     }
 }
 
 // gather 함수의 정의
-void gather(const uint8_t* input, const uint8_t* indices, uint8_t* output, int num_indices, int input_size) {
-    if (indices == nullptr) {
-        // indices 값이 Null인 경우 입력 배열을 그대로 출력 배열로 복사
-        for (int i = 0; i < input_size; ++i) {
-            output[i] = input[i];
+void gather(const int8_t* input, const int8_t* indices, int8_t* output, int num_indices, int input_size) {
+    for (int i = 0; i < num_indices; ++i) {
+        int index = static_cast<int>(indices[i]);
+        if (index < 0 || index >= input_size) {
+            // Handle out-of-bound indices
+            continue;
         }
-    } else {
-        // indices 값이 유효한 경우 기존 gather 동작 수행
-        for (int i = 0; i < num_indices; ++i) {
-            int idx = indices[i];
-            if (idx < 0 || idx >= input_size) {
-                // 인덱스가 유효하지 않은 경우 0을 반환하거나 다른 오류 처리를 할 수 있음
-                output[i] = 0; // 또는 적절한 오류 처리를 추가
-            } else {
-                output[i] = input[idx];
-            }
-        }
+        output[i] = input[index];
     }
 }
 
@@ -487,18 +473,45 @@ void reduce_prod_int32(const int32_t* input, int32_t* output,
     }
 }
 
-// rsqrt 함수의 정의 
+// // rsqrt 함수의 정의 
+// void rsqrt(const int8_t* input, int8_t* output, int rows, int cols) {
+//     for (int i = 0; i < rows; ++i) {
+//         for (int j = 0; j < cols; ++j) {
+//             int index = i * cols + j;
+//             output[index] = 1.0f / std::sqrt(input[index]);
+//         }
+//     }
+// }
+
+// Approximation of 1/sqrt(x) using linear interpolation
+float rsqrt_approx(float number) {
+    const float threehalfs = 1.5F;
+    float x2 = number * 0.5F;
+    float y = number;
+
+    // Evil floating point bit level hacking
+    long i = *(long*)&y;
+    i = 0x5f3759df - (i >> 1);
+    y = *(float*)&i;
+
+    // 1st iteration of Newton's method
+    y = y * (threehalfs - (x2 * y * y));
+    return y;
+}
+
 void rsqrt(const int8_t* input, int8_t* output, int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             int index = i * cols + j;
-            output[index] = 1.0f / std::sqrt(input[index]);
+            float value = (float)input[index];
+            float approx = rsqrt_approx(value);
+            output[index] = (int8_t)(approx * 128); // Scale for int8_t range
         }
     }
 }
 
 // shape 함수의 정의
-void shape(const int* input_tensor, int num_dimensions, int8_t* output_tensor) {
+void shape(const int* input_tensor, int num_dimensions, int* output_tensor) {
     // input_tensor: 입력 텐서의 shape 정보를 나타내는 배열입니다.
     // num_dimensions: 입력 텐서의 차원 수입니다.
     // output_tensor: 출력 텐서로, shape 정보를 저장할 배열입니다.
@@ -618,37 +631,46 @@ void strided_slice_4Dto4D_int8(const int8_t* input, int d1, int d2, int d3, int 
 }
 
 void strided_slice_4Dto4D_int32(const int32_t* input, int d1, int d2, int d3, int d4,
-                                    const int* begin, const int* end, const int* strides,
-                                    int32_t* output, int o_d1, int o_d2, int o_d3, int o_d4,
-                                    int begin_mask, int end_mask, int ellipsis_mask,
-                                    int new_axis_mask, int shrink_axis_mask) {
-        // 입력 텐서와 출력 텐서의 차원 수 계산
-        int input_dims[4] = {d1, d2, d3, d4};
-        int output_dims[4] = {o_d1, o_d2, o_d3, o_d4};
+                                const int* begin, const int* end, const int* strides,
+                                int32_t* output, int o_d1, int o_d2, int o_d3, int o_d4,
+                                int begin_mask, int end_mask, int ellipsis_mask,
+                                int new_axis_mask, int shrink_axis_mask) {
+    auto clamp = [](int v, int lo, int hi) {
+        return std::min(std::max(v, lo), hi);
+    };
 
-        // 슬라이싱 루프
-        for (int i = 0; i < o_d1; ++i) {
-            for (int j = 0; j < o_d2; ++j) {
-                for (int k = 0; k < o_d3; ++k) {
-                    for (int l = 0; l < o_d4; ++l) {
-                        // 계산된 인덱스
-                        int in_i = begin[0] + i * strides[0];
-                        int in_j = begin[1] + j * strides[1];
-                        int in_k = begin[2] + k * strides[2];
-                        int in_l = begin[3] + l * strides[3];
+    auto start_for_axis = [&](int axis, int dim_size) {
+        int start = begin[axis];
+        if (begin_mask & (1 << axis)) {
+            start = strides[axis] > 0 ? 0 : dim_size - 1;
+        }
+        if (start < 0) start += dim_size;
+        return clamp(start, strides[axis] > 0 ? 0 : -1, strides[axis] > 0 ? dim_size : dim_size - 1);
+    };
 
-                        // 범위 검사
-                        if (in_i >= end[0] || in_j >= end[1] || in_k >= end[2] || in_l >= end[3]) {
-                            continue;
-                        }
+    auto stop_for_axis = [&](int axis, int dim_size, int start) {
+        int stop = end[axis];
+        if (end_mask & (1 << axis)) {
+            stop = strides[axis] > 0 ? dim_size : -1;
+        }
+        if (stop < 0) stop += dim_size;
+        return clamp(stop, strides[axis] > 0 ? 0 : -1, strides[axis] > 0 ? dim_size : dim_size - 1);
+    };
 
-                        // 1D 인덱스로 변환
-                        int input_index = ((in_i * input_dims[1] + in_j) * input_dims[2] + in_k) * input_dims[3] + in_l;
-                        int output_index = ((i * output_dims[1] + j) * output_dims[2] + k) * output_dims[3] + l;
+    int starts[4] = { start_for_axis(0, d1), start_for_axis(1, d2), start_for_axis(2, d3), start_for_axis(3, d4) };
+    int stops[4] = { stop_for_axis(0, d1, starts[0]), stop_for_axis(1, d2, starts[1]), stop_for_axis(2, d3, starts[2]), stop_for_axis(3, d4, starts[3]) };
 
-                        // 출력 텐서에 값 복사
-                        output[output_index] = input[input_index];
-                    
+    std::cout << "Starts: " << starts[0] << ", " << starts[1] << ", " << starts[2] << ", " << starts[3] << std::endl;
+    std::cout << "Stops: " << stops[0] << ", " << stops[1] << ", " << stops[2] << ", " << stops[3] << std::endl;
+
+    int out_index = 0;
+    for (int i = starts[0]; (strides[0] > 0) ? (i < stops[0]) : (i > stops[0]); i += strides[0]) {
+        for (int j = starts[1]; (strides[1] > 0) ? (j < stops[1]) : (j > stops[1]); j += strides[1]) {
+            for (int k = starts[2]; (strides[2] > 0) ? (k < stops[2]) : (k > stops[2]); k += strides[2]) {
+                for (int l = starts[3]; (strides[3] > 0) ? (l < stops[3]) : (l > stops[3]); l += strides[3]) {
+                    output[out_index] = input[((i * d2 + j) * d3 + k) * d4 + l];
+                    std::cout << "output[" << out_index << "]: " << output[out_index] << std::endl;
+                    out_index++;
                 }
             }
         }
