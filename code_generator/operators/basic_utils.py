@@ -147,17 +147,33 @@ sprintf(buf, \""""
             return f"&buffer{location}[{offset}]"
         else:
             raise NotImplementedError
+        
+    def _getBufferstrPrint(self, location, offset):
+        if location == "front":
+            return f"buffer0[{offset}+i]"
+        elif location == "end":
+            return f"buffer0[{offset}+i]"
+        elif location == "residual":
+            return f"buffer1[{offset}+i]"
+        elif location.startswith("stage"):
+            return f"buffer{location}[{offset}+i]"
+        elif location.startswith("dagop"):
+            return f"buffer{location}[{offset}+i]"
+        else:
+            raise NotImplementedError
 
     def _getBufferstrCast(self, location, offset, dtype="float32"):
         ret = ""
 
         cast_type = "float"
         if dtype == "int8":
-            cast_type = "signed char"
+            cast_type = "int8_t"
         elif dtype == "bool":
             cast_type = "bool"
         elif dtype == "int32":
             cast_type = "int32_t"
+        elif dtype == "uint8":
+            cast_type = "uint8_t"
         cast_str = f"({cast_type}*)"
 
         ret += cast_str
@@ -189,6 +205,7 @@ class tensor:
         "int32": 4,
         "fp32": 4,
         "float32": 4,
+        "uint8": 1,
     }
 
     def __init__(self, graph_idx, dtype, dims) -> None:

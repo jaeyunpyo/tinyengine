@@ -39,8 +39,10 @@ from code_generator.CodegenUtilTFlite import GenerateSourceFilesFromTFlite
 # 2: To deploy the model on MCU, we need to first convert the model to an Intermediate Representation (IR) and
 # get the weight parameters and scale parameters.
 # tflite_path = download_tflite(net_id="mcunet-vww1")
-tflite_path = "C:\\workspaces\\tinyengine\\examples\\deit_tiny_patch16_224_int8.tflite"
+# tflite_path = "C:\\workspaces\\tinyengine\\examples\\deit_tiny_patch16_224_int8.tflite"
+# tflite_path = "D:\\workspace\\tinyengine\\experimental\\vit\\tflite\\deit_tiny_patch16_224_int8.tflite"
 # tflite_path = "deit_tiny_patch16_224_int8.tflite"
+tflite_path = "D:\\workspace\\tinyengine\\experimental\\vit\\tflite\\deit_tiny_quantized.tflite"
 
 
 # 3. Let's generate source code for on-device deployment

@@ -2,4 +2,5 @@
 __pycache__/
 *.py[cod]
 *$py.class
-experimental/vit/build/build
+experimental/vit/build/build/
+experimental/vit/tflite/build/

@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx -mavx2")
 set(SOURCES
     main.cpp
     genModel.c
+    genModel.h
 )
 
 # C 소스 파일을 C++로 처리
@@ -20,3 +21,9 @@ set_source_files_properties(genModel.c PROPERTIES LANGUAGE CXX)
 
 # 실행 파일 생성
 add_executable(MyProject ${SOURCES})
+
+# test_image.bin 파일을 빌드 디렉토리로 복사
+add_custom_command(TARGET MyProject POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/test_image.bin $<TARGET_FILE_DIR:MyProject>
+)

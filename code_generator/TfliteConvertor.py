@@ -30,6 +30,7 @@ from code_generator.converters.tflite_parser.utils import (
 from .constant import SKIP_OPs
 from .tflite import Model
 
+import numpy as np
 
 # Parse tflite model into TinyEngine IR format
 class TfliteConvertor(object):
@@ -83,14 +84,72 @@ class TfliteConvertor(object):
                     "output_idx:",
                     layer["output_idx"],
                 )
+                
+    def print_tensor_params(self, tensor):
+        tensor_type = tensor.Type()
+        tensor_shape = [tensor.Shape(i) for i in range(tensor.ShapeLength())]
+        
+        # tensor_data = bytearray(self.model.Buffers(tensor.Buffer()).DataAsNumpy().tolist())  # Tensor data for visualization
+
+        print(f"    Type: {tensor_type} {getTensorTypeStr(tensor_type)}")
+        print(f"    Shape: {' '.join(map(str, tensor_shape))}")
+        # print(f"    Bytes: {tensor_bytes}")
+        # print("Data: ", ' '.join(map(str, tensor_data)))
+
+        quantization = tensor.Quantization()
+        if quantization is not None:
+            scale = quantization.Scale(0) if quantization.ScaleLength() > 0 else None
+            zero_point = quantization.ZeroPoint(0) if quantization.ZeroPointLength() > 0 else None
+            print(f"    Quantization - Scale: {scale}, Zero Point: {zero_point}")
 
     def parseOperatorInfo(self):
         op_count = self.model.Subgraphs(0).OperatorsLength()
+        subgraph = self.model.Subgraphs(0)
         op_idx = 0
+        
+        print(f"Total number of operators: {op_count}")
 
         while op_idx < op_count:
             op = self.model.Subgraphs(0).Operators(op_idx)
-            op_code_str = getOpCodeStr(op, self.model)
+            op_code_id = self.model.OperatorCodes(op.OpcodeIndex()).BuiltinCode()
+            input_tensors = [op.Inputs(i) for i in range(op.InputsLength())]
+            output_tensors = [op.Outputs(i) for i in range(op.OutputsLength())]
+            
+            print(f"Layer: {op_idx}")
+            print(f"  Opcode index(Node index?): {op.OpcodeIndex()}")
+            print(f"  Operator code ID: {op_code_id} - {getOpCodeStr(op, self.model)}")
+            print(f"  Input tensor indices: {input_tensors}")
+            
+            # Input tensor parameters
+            i = 0
+            for idx in input_tensors:
+                tensor = subgraph.Tensors(idx)
+                print(f"  Input tensor {i} - {idx}:")
+                if idx != -1:
+                    self.print_tensor_params(tensor)
+                    buffer_index = tensor.Buffer()
+                    if buffer_index:
+                        buffer = self.model.Buffers(buffer_index)
+                        buffer_data = bytes(buffer.DataAsNumpy())
+                        input_datas = np.frombuffer(buffer_data, dtype=np.uint8)
+                        print(f"    Input data: {input_datas}")
+                i += 1
+
+            print(f"  Output tensor indices: {output_tensors}")
+
+            # Output tensor parameters
+            i = 0
+            for idx in output_tensors:
+                tensor = subgraph.Tensors(idx)
+                print(f"  Output tensor {i} - {idx}:")
+                self.print_tensor_params(tensor)
+                buffer_index = tensor.Buffer()
+                if buffer_index:
+                    buffer = self.model.Buffers(buffer_index)
+                    buffer_data = bytes(buffer.DataAsNumpy())
+                    output_datas = np.frombuffer(buffer_data, dtype=np.uint8)
+                    print(f"    Output data: {output_datas}")
+                i += 1
 
             # if op_code_str == "RESHAPE":
             #     # Check the next 5 operators
@@ -100,28 +159,28 @@ class TfliteConvertor(object):
             #         continue
 
             # Handle the current operator if not part of fusion
+            print(f"\n\n")
             self._handleOperator(op)
             op_idx += 1
 
-    def check_fusion_pattern(self, start_idx):
-        fusion_pattern = ['BLOCKING_PATTERN', 'RESHAPE', 'ADD', 'RESHAPE', 'TRANSPOSE', 'FULLY_CONNECTED']
-        op_count = self.model.Subgraphs(0).OperatorsLength()
+    # def check_fusion_pattern(self, start_idx):
+    #     fusion_pattern = ['BLOCKING_PATTERN', 'RESHAPE', 'ADD', 'RESHAPE', 'TRANSPOSE', 'FULLY_CONNECTED']
+    #     op_count = self.model.Subgraphs(0).OperatorsLength()
 
-        if start_idx + 4 >= op_count:
-            return False
+    #     if start_idx + 4 >= op_count:
+    #         return False
 
-        for i, pattern in enumerate(fusion_pattern):
-            op_code_str = getOpCodeStr(self.model.Subgraphs(0).Operators(start_idx + i), self.model)
-            if op_code_str != pattern:
-                return False
+    #     for i, pattern in enumerate(fusion_pattern):
+    #         op_code_str = getOpCodeStr(self.model.Subgraphs(0).Operators(start_idx + i), self.model)
+    #         if op_code_str != pattern:
+    #             return False
 
-        return True
+    #     return True
 
     # handle one op and parse it into layers[] for supported operators
     def _handleOperator(self, op):
         op_code_str = getOpCodeStr(op, self.model)
         
-        print(op_code_str)
         if op_code_str == "CONV_2D":
             self.layer.append(TF_Parser.parse_conv2d(op, self.model, self.tmpPADIndice))
             self.tmpPADIndice = None
@@ -158,6 +217,8 @@ class TfliteConvertor(object):
             self.layer.append(TF_Parser.parse_softmax(op, self.model))
         elif op_code_str == "PLACEHOLDER_FOR_GREATER_OP_CODES":
             self.layer.append(TF_Parser.parse_placeholder_for_greater_op_codes(op, self.model))
+        elif op_code_str == "QUANTIZE":
+            self.layer.append(TF_Parser.parse_quantize(op, self.model))
 
         
         elif op_code_str == "AVERAGE_POOL_2D":
@@ -181,6 +242,8 @@ class TfliteConvertor(object):
                 self.layer.append(ret_op)
         elif op_code_str == "TRANSPOSE":
             self._convert_TRANSPOSE(op)
+        elif op_code_str == "UNKNOWN":
+            pass
         elif op_code_str in SKIP_OPs:
             pass
         else:
